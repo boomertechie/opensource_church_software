@@ -54,6 +54,10 @@ Additional details will eventually be added to each software solution (pros/cons
 
 [Nextcloud](https://nextcloud.com/)
 
+### Digital signature
+
+[LibreSign](https://libresign.coop)
+
 ### Financial Accounting
 
 [GnuCash](https://gnucash.org/)
