@@ -154,12 +154,12 @@ Modern, Doodle-style scheduling tool for finding the best time for group meeting
 version: "3"
 services:
   rallly:
-    image: lukevella/rallly:latest
+    image: rallly/rallly:latest
     ports:
       - "3000:3000"
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/rallly
-      - SECRET_KEY=your-secret-key-here
+      - SECRET_KEY=${RALLLY_SECRET}
     depends_on:
       - db
   db:
@@ -186,8 +186,8 @@ volumes:
 - Organizations with 100+ recurring positions
 
 **Links:**
-- GitHub: https://github.com/lukevella/rallly
-- Demo: https://rallly.co
+- Website: https://rallly.co
+- GitHub: https://rallly.co/github
 - Self-hosting docs: https://support.rallly.co/self-hosting
 
 ---
