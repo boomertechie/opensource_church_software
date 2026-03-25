@@ -119,6 +119,7 @@ Most churches need software for these common functions:
 
 **Media & Worship:**
 - Presentation Software (OpenLP, Quelea)
+- Tablet Chord Charts (Worship Viewer)
 - Live Streaming (OBS Studio)
 - Sermon Hosting (see [Sermon & Media guide](categories/sermon-media/))
 
@@ -186,6 +187,7 @@ A condensed list of free and open source tools by category. See category guides 
 ### Presentation
 - [OpenLP](https://openlp.org/) - Worship presentation software
 - [Quelea](https://quelea.org/) - Projection software for worship
+- [Worship Viewer](https://github.com/boomertechie/worship-viewer) - Self-hosted tablet chord chart viewer for worship teams (Docker, iPad-optimized)
 
 ### Live Streaming
 - [OBS Studio](https://obsproject.com/) - Video recording and live streaming
