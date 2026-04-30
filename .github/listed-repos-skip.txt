@@ -1,0 +1,7 @@
+# Repos to exclude from the rolling health-check report.
+# One `owner/repo` per line. Comments start with #.
+#
+# Use this for projects we already know are abandoned and intentionally
+# documented as "Not Recommended" — flagging them every week is just noise.
+
+aerogear/OpenVolunteerPlatform
