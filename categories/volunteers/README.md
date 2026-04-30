@@ -23,51 +23,24 @@ There are two main approaches:
 
 ## OpenVolunteerPlatform
 
-**Status:** ⚠️ Maintenance Mode (last commit: 2022)
+**Status:** ⛔ Not Recommended — Abandoned
 
-**Skill Level:** Advanced
+**Why we removed the recommendation:**
+- Last meaningful commit was **July 2020**; only Renovate bot dependency PRs since
+- Built as a one-off COVID-19 response project by Red Hat's now-defunct aerogear team
+- Core dependencies are themselves abandoned (Graphback, Offix), so "updating" the project is effectively a rewrite
+- Multiple unaddressed CVEs in transitive dependencies (express, mongodb, keycloak-connect, moment, etc.)
 
-**True Cost:**
-- Software: Free
-- Hosting: $10-30/mo VPS (requires 2GB+ RAM)
-- Setup Time: 8-12 hours
-- Ongoing Maintenance: 2-4 hours/month
+**If you're searching for this project:** Skip the fork-and-update path. The architecture (Graphback + Offix + MQTT + Keycloak) wasn't justified for most churches even when it was alive. For comparable functionality, see Volunteer Planner, ChurchApps, or your existing ChMS.
 
-**What It Does:**
-Full-featured volunteer management platform originally built for crisis response (COVID-19). Includes role-based scheduling, real-time tracking via GraphQL subscriptions, automated reporting, and offline-capable mobile apps.
-
-**Why Churches Use It:**
-- Hierarchical organization structure (nations → regions → areas → cities)
-- Complex shift scheduling with capacity limits
-- Mobile apps with offline support
-- Real-time updates when volunteers check in/out
-- Built-in reporting and statistics
-
-**Installation:**
-- **Docker:** Available but complex (requires Keycloak, PostgreSQL, MQTT broker)
-- **Self-hosted:** See [deployment guide](https://github.com/aerogear/OpenVolunteerPlatform/blob/master/docs)
-
-**Architecture:**
-- Backend: Node.js/GraphQL with Graphback
-- Frontend: React with Offix (offline support)
-- Auth: Keycloak (SSO)
-- Real-time: MQTT broker for subscriptions
-
-**Caveats:**
-- Last significant update was 2022 — appears to be in maintenance mode
-- Overkill for small churches (< 50 volunteers)
-- Requires DevOps knowledge to deploy and maintain
-- Mobile apps need custom build for your instance
-
-**Links:**
+**Original links (for archaeology only):**
 - GitHub: https://github.com/aerogear/OpenVolunteerPlatform
-- Docs: https://github.com/aerogear/OpenVolunteerPlatform/tree/master/docs
 
 ---
 
 ## Volunteer Planner (volunteer-planner.org)
 
-**Status:** ✅ Active (last commit: 2024)
+**Status:** ⚠️ Stale (last commit: May 2023, mostly Dependabot)
 
 **Skill Level:** Intermediate
 
@@ -128,7 +101,7 @@ pip install -r requirements/dev.txt
 
 ## Rallly
 
-**Status:** ✅ Very Active (last commit: 2025)
+**Status:** ✅ Very Active (verified 2026-04-30, commits same day)
 
 **Skill Level:** Beginner to Intermediate
 
@@ -194,7 +167,7 @@ volumes:
 
 ## ChurchApps (CHUMS/B1)
 
-**Status:** ✅ Very Active (last commit: 2025)
+**Status:** ✅ Very Active (verified 2026-04-30, commits same day)
 
 **Skill Level:** Beginner
 
@@ -241,15 +214,16 @@ Full church management system with integrated volunteer scheduling, check-in, gr
 
 ## Comparison Matrix
 
-| Feature | OpenVolunteerPlatform | Volunteer Planner | Rallly | ChurchApps |
-|---------|----------------------|-------------------|--------|------------|
-| **Recurring Schedules** | ✅ | ✅ | ❌ | ✅ |
-| **Self-Serve Swap** | ✅ | ✅ | N/A | ✅ |
-| **Mobile Apps** | ✅ (build required) | ❌ | ✅ (web) | ✅ (native) |
-| **Check-in Integration** | ✅ | ❌ | ❌ | ✅ |
-| **Skill Level** | Advanced | Intermediate | Beginner | Beginner |
-| **Setup Time** | 8-12 hrs | 2-4 hrs | 30 min | 15 min (cloud) |
-| **Maintenance** | High | Medium | Low | Low/Medium |
+| Feature | Volunteer Planner | Rallly | ChurchApps |
+|---------|-------------------|--------|------------|
+| **Project Health** | ⚠️ Stale (2023) | ✅ Very active | ✅ Very active |
+| **Recurring Schedules** | ✅ | ❌ | ✅ |
+| **Self-Serve Swap** | ✅ | N/A | ✅ |
+| **Mobile Apps** | ❌ | ✅ (web) | ✅ (native) |
+| **Check-in Integration** | ❌ | ❌ | ✅ |
+| **Skill Level** | Intermediate | Beginner | Beginner |
+| **Setup Time** | 2-4 hrs | 30 min | 15 min (cloud) |
+| **Maintenance** | Medium | Low | Low/Medium |
 
 ---
 
@@ -273,9 +247,10 @@ Full church management system with integrated volunteer scheduling, check-in, gr
 - Service planning integration
 
 ### Large Church (1000+)
-**Use:** Evaluate OpenVolunteerPlatform (if maintained) or commercial solutions
-- May need custom development
-- Consider integration with existing ChMS
+**Use:** ChurchApps (self-hosted) or a commercial ChMS with a volunteer module (Planning Center Services, Rock RMS)
+- At this scale, integration with check-in, giving, and service planning matters more than scheduling alone
+- Custom development is a real option, but start with a maintained platform — not an abandoned one
+- Volunteer Planner can still work for single-purpose teams; pair it with your existing ChMS
 
 ---
 
@@ -332,4 +307,4 @@ Native volunteer module included — no integration needed.
 
 ---
 
-*Last Updated: 2026-02-03 | Maintained by: church-tech-stack maintainers*
+*Last Updated: 2026-04-30 | Maintained by: church-tech-stack maintainers*
