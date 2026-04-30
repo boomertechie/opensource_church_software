@@ -11,7 +11,7 @@
 | **Files** | Nextcloud | Document storage, collaboration, calendars |
 | **Email** | Listmonk | Newsletters, announcements, automated emails |
 | **Monitoring** | Uptime Kuma | Service health monitoring |
-| **Updates** | Watchtower | Automatic container updates |
+| **Updates** | Diun | Notifies you of available container image updates (manual apply) |
 
 ## System Requirements
 
@@ -192,22 +192,28 @@ docker exec -i small-church-wordpress-db mysql -u root -p${MYSQL_ROOT_PASSWORD} 
 
 ### Updates
 
-> **WARNING: Watchtower Risks**
->
-> Watchtower automatically updates containers, which can break things without warning. Mitigations:
-> 1. **Monitor notifications** — Watchtower emails you when updates occur
-> 2. **Test backups monthly** — Ensure you can restore if an update breaks something
-> 3. **Consider pinning critical images** — Change `image: wordpress:latest` to `image: wordpress:6.4` for stability
-> 4. **No rollback built-in** — If an update breaks things, you must restore from backup or manually pull old image
->
-> For production stability, consider disabling Watchtower and doing manual updates during maintenance windows.
+This stack uses **Diun** for image-update notifications. Diun does *not* update containers automatically — it emails you when a watched image has a new tag, and you apply the update manually during a maintenance window.
 
-Watchtower handles automatic container updates. For application updates:
+The previous version of this stack used `containrrr/watchtower`, which was archived in late 2025. Auto-updaters are convenient but can take a service down without warning when an upstream image introduces a breaking change. For a small church without rollback infrastructure, the notification-only model is the safer default.
 
-**WordPress:** Use admin panel → Updates
-**ChurchCRM:** Built-in updater
-**Nextcloud:** Admin panel → Overview → Update
-**Listmonk:** Update container image version in docker-compose.yml
+**To apply updates after a Diun notification:**
+
+```bash
+cd ~/small-church
+docker compose pull
+docker compose up -d
+```
+
+Run this during a quiet weekday window — never on Saturday night or Sunday morning. Test the affected service immediately after.
+
+**If you really want hands-off auto-updates:** swap the Diun service in `docker-compose.yml` for `ghcr.io/nicholas-fedor/watchtower:latest` (the maintained watchtower fork) using the existing `WATCHTOWER_*` env-var conventions. Re-read the warnings above first.
+
+**Application-level updates (separate from container updates):**
+
+- **WordPress:** Admin panel → Updates
+- **ChurchCRM:** Built-in updater
+- **Nextcloud:** Admin panel → Overview → Update
+- **Listmonk:** Bump the image tag in `docker-compose.yml` and re-run `docker compose up -d`
 
 ### Monitoring
 
