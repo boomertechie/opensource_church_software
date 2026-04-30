@@ -202,12 +202,39 @@ def render_body(results: list[dict], flagged: list[tuple[dict, str]]) -> str:
     return "\n".join(lines)
 
 
+def write_step_summary(body: str) -> None:
+    """Append the report to the workflow's job summary so it shows on the run page."""
+    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary_path:
+        return
+    try:
+        with open(summary_path, "a", encoding="utf-8") as f:
+            f.write(body)
+            f.write("\n")
+    except OSError as e:
+        print(f"could not write step summary: {e}", file=sys.stderr)
+
+
 def upsert_report_issue(body: str) -> None:
     if DRY_RUN or not REPO or not TOKEN:
         print("--- DRY RUN: would post the following issue body ---")
         print(body)
         return
-    issues = gh("GET", f"/repos/{REPO}/issues", params={"state": "open", "per_page": 100})
+    try:
+        issues = gh("GET", f"/repos/{REPO}/issues",
+                    params={"state": "open", "per_page": 100})
+    except urllib.error.HTTPError as e:
+        if e.code in (404, 410):
+            print(
+                "issues API returned "
+                f"{e.code}; issues likely disabled on this repo. "
+                "Report is still in the job summary. To enable issues: "
+                "Settings → Features → Issues, or "
+                "`gh api -X PATCH repos/{owner}/{repo} -F has_issues=true`.",
+                file=sys.stderr,
+            )
+            return
+        raise
     existing = next(
         (
             i for i in issues
@@ -217,14 +244,19 @@ def upsert_report_issue(body: str) -> None:
         None,
     )
     title = f"{REPORT_TITLE_PREFIX} — {dt.date.today()}"
-    if existing:
-        gh("PATCH", f"/repos/{REPO}/issues/{existing['number']}",
-           body={"title": title, "body": body})
-        print(f"Updated issue #{existing['number']}")
-    else:
-        gh("POST", f"/repos/{REPO}/issues",
-           body={"title": title, "body": body, "labels": [REPORT_LABEL]})
-        print("Created new health-report issue")
+    try:
+        if existing:
+            gh("PATCH", f"/repos/{REPO}/issues/{existing['number']}",
+               body={"title": title, "body": body})
+            print(f"Updated issue #{existing['number']}")
+        else:
+            gh("POST", f"/repos/{REPO}/issues",
+               body={"title": title, "body": body, "labels": [REPORT_LABEL]})
+            print("Created new health-report issue")
+    except urllib.error.HTTPError as e:
+        # Don't fail the whole run if posting fails — the summary is the fallback.
+        print(f"could not upsert issue (HTTP {e.code}); see job summary instead",
+              file=sys.stderr)
 
 
 def main() -> int:
@@ -253,6 +285,7 @@ def main() -> int:
             flagged.append((r, f"no non-bot commit in {d} days"))
 
     body = render_body(results, flagged)
+    write_step_summary(body)
     upsert_report_issue(body)
     return 0
 
