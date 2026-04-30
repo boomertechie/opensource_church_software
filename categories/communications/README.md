@@ -105,117 +105,73 @@ docker-compose up -d
 
 ## Mailtrain
 
-**Status:** ⚠️ Low Activity (last significant commit: 2023)
+**Status:** ⛔ Not Recommended — Abandoned (last human commit December 2022)
+
+Listmonk above does everything most churches need from a newsletter platform and is an active, single-binary Go application — easier to deploy and maintain than Mailtrain ever was. If you specifically need Mailtrain's automation workflows or A/B testing, evaluate Rock RMS or a hosted service instead. Don't start a new Mailtrain deployment in 2026.
+
+- Original repo (for reference): https://github.com/Mailtrain-org/mailtrain
+
+---
+
+## Pretix
+
+**Status:** ✅ Very Active (verified 2026-04-30)
 
 **Skill Level:** Intermediate
 
 **True Cost:**
-- Software: Free
-- Hosting: $10-20/mo VPS (2GB RAM recommended)
+- Software: Free (AGPL-3.0)
+- Hosting: $10-20/mo VPS (2GB RAM)
 - Setup Time: 2-4 hours
-- Ongoing Maintenance: 2-3 hours/month
+- Ongoing Maintenance: 1-2 hours/month
 
 **What It Does:**
-Self-hosted newsletter application built on Node.js. Inspired by MailChimp with similar features including automation, segmentation, and visual editors. More feature-rich than Listmonk but more complex to deploy.
+Modern, well-maintained event ticketing platform built in Django. Used in production by conferences, festivals, and nonprofits across Europe. Free and paid tickets, multiple ticket categories, discount codes, check-in, attendee export, embeddable widgets — all the things churches need for retreats, VBS, and fundraising dinners.
 
 **Why Churches Use It:**
-- Full automation workflows (welcome series, drip campaigns)
-- A/B testing for campaigns
-- RSS-to-email (auto-send blog posts)
-- Custom forms and landing pages
-- Advanced segmentation logic
-- Multi-user support with permissions
+- Free *or* paid event registration (retreats, conferences, VBS, fundraising dinners)
+- QR-code tickets and a check-in app
+- Custom branding per event
+- Discount codes and tiered pricing
+- Stripe / PayPal / SEPA payment processing
+- Strong GDPR posture out of the box
+- Embeddable widgets for the church website
+- Active development — regular releases
 
 **Installation:**
-```bash
-# Prerequisites: Node.js 14+, MySQL/PostgreSQL, Redis
-git clone https://github.com/Mailtrain-org/mailtrain.git
-cd mailtrain
-npm install
-cp config/default.yaml config/production.yaml
-# Edit production.yaml with your settings
-NODE_ENV=production npm start
-```
-
-**Architecture:**
-- Backend: Node.js/Express
-- Database: MySQL or PostgreSQL
-- Queue: Redis
-- Frontend: React
+- **Docker:** Official image at `pretix/standalone` with documented Compose setup
+- **Hosted:** pretix.eu offers managed hosting if you'd rather not self-host
+- **Docs:** https://docs.pretix.eu/
 
 **Caveats:**
-- Project appears to be in maintenance mode (minimal updates since 2023)
-- More complex setup than Listmonk
-- Requires more resources (2GB RAM vs 1GB)
-- Smaller community and documentation
-- Installation process is less streamlined
+- Heavier than a "just collect names" form — overkill for free RSVPs to a 30-person event
+- Originally designed for ticketed conferences; church-specific terminology (volunteer slots, room assignments) doesn't map perfectly
+- For purely free / non-ticketed events, a Listmonk signup form or Nextcloud Forms is simpler
+
+**Lighter alternative:** [Alf.io](https://github.com/alfio-event/alf.io) (also active, also AGPL) is a smaller-footprint Java/Spring application focused on ticketed events. Worth a look if Pretix feels like too much.
+
+**For free RSVPs only:** Skip event-ticketing software entirely. Listmonk + a Nextcloud Form, or a WordPress contact form, handles it.
 
 **Links:**
-- GitHub: https://github.com/Mailtrain-org/mailtrain
-- Docs: https://github.com/Mailtrain-org/mailtrain/wiki
+- GitHub: https://github.com/pretix/pretix
+- Website: https://pretix.eu/
+- Docs: https://docs.pretix.eu/
 
 ---
 
 ## Attendize
 
-**Status:** ⚠️ Maintenance Mode (last commit: 2022)
+**Status:** ⛔ Not Recommended — Abandoned (last human commit January 2023)
 
-**Skill Level:** Intermediate
+Use **Pretix** above instead. Attendize was a useful Laravel-based ticketing platform but has not seen meaningful development since early 2023 and runs on PHP 7.4/8.0 versions that are themselves end-of-life.
 
-**True Cost:**
-- Software: Free
-- Hosting: $10-20/mo VPS
-- Setup Time: 2-4 hours
-- Ongoing Maintenance: 1-2 hours/month
-
-**What It Does:**
-Open-source event ticketing and management platform built on Laravel. Think Eventbrite for churches. Handles event registration, ticket sales (free or paid), check-in, and attendee management.
-
-**Why Churches Use It:**
-- Free/paid event registration (retreats, conferences, VBS)
-- QR code tickets for check-in
-- Custom event pages with branding
-- Discount codes and early bird pricing
-- Attendee data export
-- Payment processing (Stripe, PayPal)
-- Email confirmations and reminders
-- Embeddable widgets for church website
-
-**Installation:**
-```bash
-# Docker (recommended)
-git clone https://github.com/Attendize/Attendize.git
-cd Attendize
-cp .env.example .env
-# Edit .env with database and email settings
-docker-compose up -d
-docker-compose exec app php artisan key:generate
-docker-compose exec app php artisan migrate
-```
-
-**Use Cases:**
-- **Vacation Bible School** — Registration with age groups and volunteer signups
-- **Church Retreats** — Ticket sales with early bird pricing
-- **Conferences** — Multiple sessions, workshops, speaker management
-- **Fundraising Dinners** — Table reservations and donations
-- **Community Events** — Free events with RSVP tracking
-
-**Caveats:**
-- Project is in maintenance mode (no major updates since 2022)
-- PHP 7.4/8.0 required (Laravel framework)
-- Stripe/PayPal setup required for paid events
-- Email configuration critical for ticket delivery
-- Limited mobile app functionality (web-based only)
-
-**Links:**
-- GitHub: https://github.com/Attendize/Attendize
-- Demo: https://www.attendize.com/documentation.php
+- Original repo (for reference): https://github.com/Attendize/Attendize
 
 ---
 
 ## Rallly
 
-**Status:** ✅ Very Active (last commit: 2025)
+**Status:** ✅ Very Active (verified 2026-04-30, commits same day)
 
 **Skill Level:** Beginner to Intermediate
 
@@ -269,7 +225,7 @@ volumes:
 
 **When NOT to Use Rallly:**
 - Mass newsletters (use Listmonk)
-- Event ticketing (use Attendize)
+- Event ticketing (use Pretix)
 - Recurring weekly schedules (use ChMS)
 
 **Links:**
@@ -348,18 +304,18 @@ volumes:
 
 ## Comparison Matrix
 
-| Feature | Listmonk | Mailtrain | Attendize | Rallly | ChurchCRM | Rock RMS |
-|---------|----------|-----------|-----------|--------|-----------|----------|
-| **Newsletter Campaigns** | ✅ | ✅ | ❌ | ❌ | ✅ (via MailChimp) | ✅ |
-| **Event Registration** | ❌ | ❌ | ✅ | ❌ | ✅ (basic) | ✅ |
-| **Meeting Scheduling** | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| **A/B Testing** | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ |
-| **Automation Workflows** | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ |
-| **SMS Messaging** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Setup Time** | 30 min | 2-4 hrs | 2-4 hrs | 30 min | 4-6 hrs | 8+ hrs |
-| **Skill Level** | Beginner | Intermediate | Intermediate | Beginner | Intermediate | Advanced |
-| **Maintenance** | Low | Medium | Medium | Low | Medium | High |
-| **Active Development** | ✅ | ⚠️ | ⚠️ | ✅ | ✅ | ✅ |
+| Feature | Listmonk | Pretix | Rallly | ChurchCRM | Rock RMS |
+|---------|----------|--------|--------|-----------|----------|
+| **Project Health** | ✅ Very active | ✅ Very active | ✅ Very active | ✅ Active | ✅ Very active |
+| **Newsletter Campaigns** | ✅ | ❌ | ❌ | ✅ (via MailChimp) | ✅ |
+| **Event Registration** | ❌ | ✅ | ❌ | ✅ (basic) | ✅ |
+| **Meeting Scheduling** | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **A/B Testing** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Automation Workflows** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **SMS Messaging** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Setup Time** | 30 min | 2-4 hrs | 30 min | 4-6 hrs | 8+ hrs |
+| **Skill Level** | Beginner | Intermediate | Beginner | Intermediate | Advanced |
+| **Maintenance** | Low | Medium | Low | Medium | High |
 
 ---
 
@@ -376,7 +332,7 @@ volumes:
 - Listmonk for weekly newsletters
 - Rallly for event scheduling
 - Total cost: $10-15/mo (VPS + email sending)
-- Add Attendize if you run paid events
+- Add Pretix if you run paid events
 
 ### Mid-Size Church (200-1000)
 **Use:** Listmonk or ChurchApps (integrated)
@@ -455,8 +411,8 @@ Self-hosted email servers (Postfix) get flagged as spam without proper configura
 - Import to Listmonk lists
 - Update periodically or use API integration
 
-### Attendize + Giving Platform
-- Embed Attendize registration on church website
+### Pretix + Giving Platform
+- Embed Pretix registration widget on church website
 - Use webhooks to trigger follow-up emails
 - Export attendee data for check-in systems
 
@@ -503,4 +459,4 @@ Self-hosted email servers (Postfix) get flagged as spam without proper configura
 
 ---
 
-*Last Updated: 2026-02-10 | Maintained by: church-tech-stack maintainers*
+*Last Updated: 2026-04-30 | Maintained by: church-tech-stack maintainers*

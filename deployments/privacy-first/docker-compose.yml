@@ -406,24 +406,30 @@ services:
       - privacy-first
     restart: unless-stopped
 
-  # Watchtower - Automatic updates (with caution)
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: privacy-first-watchtower
+  # Diun - Image-update notifications (replaced archived containrrr/watchtower in 2026).
+  # Diun does NOT auto-update containers — it emails when a watched image has a new
+  # tag, and an admin applies the update manually. This is the right default for
+  # privacy-conscious deployments where stability matters more than cutting-edge
+  # version churn.
+  diun:
+    image: crazymax/diun:latest
+    container_name: privacy-first-diun
+    command: serve
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - diun-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_POLL_INTERVAL=604800  # Weekly (7 days)
-      - WATCHTOWER_NOTIFICATIONS=email
-      - WATCHTOWER_NOTIFICATION_EMAIL_FROM=${WATCHTOWER_EMAIL_FROM:-admin@example.com}
-      - WATCHTOWER_NOTIFICATION_EMAIL_TO=${WATCHTOWER_EMAIL_TO:-admin@example.com}
-      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER=${WATCHTOWER_EMAIL_SERVER:-smtp.example.com}
-      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PORT=${WATCHTOWER_EMAIL_PORT:-587}
-      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER=${WATCHTOWER_EMAIL_USER}
-      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD=${WATCHTOWER_EMAIL_PASSWORD}
-      # Only update during maintenance window (Sunday 2-4 AM)
-      - WATCHTOWER_SCHEDULE=0 0 2 * * 0
+      - TZ=${TZ:-America/New_York}
+      - LOG_LEVEL=info
+      - DIUN_WATCH_WORKERS=10
+      - DIUN_WATCH_SCHEDULE=0 8 * * 1  # Weekly (Monday 08:00 local)
+      - DIUN_PROVIDERS_DOCKER=true
+      - DIUN_NOTIF_MAIL_HOST=${DIUN_EMAIL_SERVER:-smtp.example.com}
+      - DIUN_NOTIF_MAIL_PORT=${DIUN_EMAIL_PORT:-587}
+      - DIUN_NOTIF_MAIL_USERNAME=${DIUN_EMAIL_USER}
+      - DIUN_NOTIF_MAIL_PASSWORD=${DIUN_EMAIL_PASSWORD}
+      - DIUN_NOTIF_MAIL_FROM=${DIUN_EMAIL_FROM:-admin@example.com}
+      - DIUN_NOTIF_MAIL_TO=${DIUN_EMAIL_TO:-admin@example.com}
     restart: unless-stopped
 
 networks:
@@ -455,3 +461,4 @@ volumes:
   uptime-kuma-data:
   duplicati-config:
   duplicati-backups:
+  diun-data:

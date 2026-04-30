@@ -3,5 +3,11 @@
 #
 # Use this for projects we already know are abandoned and intentionally
 # documented as "Not Recommended" — flagging them every week is just noise.
+# Remove an entry if upstream comes back to life and we want to re-evaluate.
 
 aerogear/OpenVolunteerPlatform
+Mailtrain-org/mailtrain
+Attendize/Attendize
+PodcastGenerator/PodcastGenerator
+containrrr/watchtower
+coders4help/volunteer_planner

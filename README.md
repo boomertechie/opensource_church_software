@@ -108,7 +108,7 @@ Most churches need software for these common functions:
 
 **Content & Communication:**
 - Website Management (WordPress, Ghost, Hugo)
-- Email Newsletters (Listmonk, Mailtrain)
+- Email Newsletters (Listmonk)
 - Document Management (Nextcloud, Seafile)
 - Digital Signatures (LibreSign)
 
@@ -134,8 +134,8 @@ Additional capabilities some churches need:
 
 - Video Conferencing (Jitsi Meet, BigBlueButton)
 - Online Document Editing (OnlyOffice, Collabora)
-- Bible Study Apps (And Bible, Bible.js)
-- Event Registration Systems
+- Bible Study Apps (And Bible)
+- Event Registration Systems (Pretix)
 - Vacation Bible School Management
 
 Are we missing a category? [Suggest one here](https://github.com/meichthys/opensource_church_software/issues/new?title=Category%20Suggestion) or submit a pull request.
@@ -199,7 +199,10 @@ A condensed list of free and open source tools by category. See category guides 
 
 ### Email & Communications
 - [Listmonk](https://listmonk.app/) - High-performance newsletter platform
-- [Mailtrain](https://mailtrain.org/) - Self-hosted newsletter application
+
+### Event Registration & Ticketing
+- [Pretix](https://pretix.eu/) - Modern event ticketing (free + paid events; QR check-in)
+- [Alf.io](https://github.com/alfio-event/alf.io) - Lighter-weight ticketing alternative
 
 ### Volunteer Management
 - See [Volunteers Guide](categories/volunteers/) for detailed options and DIY approaches
@@ -212,7 +215,6 @@ A condensed list of free and open source tools by category. See category guides 
 
 ### Bible Apps
 - [And Bible](https://andbible.github.io/) - Open source Bible study app for Android
-- [Bible.js](https://github.com/BibleJS/BibleApp) - Web-based Bible reader
 
 ### Video Conferencing
 - [Jitsi Meet](https://jitsi.org/) - Encrypted video calls
@@ -230,8 +232,10 @@ A condensed list of free and open source tools by category. See category guides 
 
 ### Monitoring & Operations
 - [Uptime Kuma](https://github.com/louislam/uptime-kuma) - Service monitoring dashboard
-- [Watchtower](https://github.com/containrrr/watchtower) - Automated container updates
+- [Diun](https://github.com/crazy-max/diun) - **Recommended.** Notifies you when container images have updates available; you decide when to apply them
 - [Duplicati](https://www.duplicati.com/) - Encrypted backup solution
+
+> Note: `containrrr/watchtower`, previously listed here for automated container updates, was archived in late 2025. If you specifically want hands-off auto-updates the maintained successor is [`nicholas-fedor/watchtower`](https://github.com/nicholas-fedor/watchtower) (drop-in replacement, image at `ghcr.io/nicholas-fedor/watchtower`). For most churches, Diun + a manual `docker compose pull && docker compose up -d` during a maintenance window is the safer choice.
 
 ---
 

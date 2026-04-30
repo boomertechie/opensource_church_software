@@ -47,31 +47,11 @@ More complex than simply uploading to YouTube. Requires understanding of RSS fee
 
 ## Podcast Generator
 
-**Status:** Active (November 2024) | **Skill Level:** Beginner-Intermediate | **License:** GPL-3.0
+**Status:** ⛔ Not Recommended — Repository archived April 2026
 
-**True Cost:** $3-10/month PHP hosting + domain; free software
+The upstream repository was archived on 2026-04-04 with no successor named. **Use Castopod above** — it's maintained, more capable, and the right choice for new deployments. Existing Podcast Generator installs will keep running, but don't start a new one.
 
-### What It Does
-
-Straightforward podcast CMS written in PHP. Upload sermon files through web interface, add episode details, and the system generates RSS feed automatically. Simple category system, basic theming, and multi-language support (56+ languages). No database required for basic usage.
-
-### Why Churches Use It
-
-Perfect for churches with basic PHP shared hosting who want podcast distribution without complexity. The 2006 codebase means exceptional stability and simplicity. Small churches appreciate the minimal resource requirements. Works well when hosted on the same server as the church website.
-
-### Installation
-
-Upload PHP files to web server, configure settings through admin panel. Requires PHP 7.4+ and basic file write permissions. Most shared hosting providers support it out of the box. Setup typically takes 30-60 minutes for beginners.
-
-### Caveats
-
-Interface feels dated compared to modern platforms. Limited built-in analytics. Not ideal for video content. Development pace is slow but steady. Best for audio-only sermon podcasts with straightforward needs. Large churches may find it too basic.
-
-### Links
-
-- Website: https://podcastgenerator.net
-- GitHub: https://github.com/PodcastGenerator/PodcastGenerator
-- Demo: Available on website
+- Original repo (for reference): https://github.com/PodcastGenerator/PodcastGenerator
 
 ---
 
@@ -226,7 +206,6 @@ Content management is one module of larger church management system—may be ove
 | Platform | Best For | Podcast RSS | Video | Transcription | Complexity | Resources |
 |----------|----------|-------------|-------|---------------|------------|-----------|
 | **Castopod** | Professional podcast distribution | Yes | Clips only | No | Medium | Medium |
-| **Podcast Generator** | Simple audio podcasts | Yes | No | No | Low | Very Low |
 | **PeerTube** | Video sermon archives + live streaming | Limited | Yes | No | High | High |
 | **Navidrome** | Internal audio library for staff/members | No | No | No | Low | Very Low |
 | **Audiobookshelf** | Sermon series organized as "courses" | No | No | No | Very Low | Low |
@@ -239,10 +218,10 @@ Content management is one module of larger church management system—may be ove
 
 ### Small Churches (Under 100)
 
-**Start Here:** Podcast Generator or Castopod
+**Start Here:** Castopod
 
-- **Podcast Generator** if you have basic PHP hosting and want simplicity
-- **Castopod** if you want professional features and have someone comfortable with Docker
+- **Castopod** is the right baseline — maintained, professional, full RSS + analytics
+- If Docker feels like too much, the simplest path is to host audio on Nextcloud or a static site and hand-write the podcast RSS feed (a single XML file the church website serves)
 - **Consider:** Audiobookshelf for organizing sermon series for internal member access
 - **Skip:** PeerTube (too resource-intensive unless video is primary format)
 
@@ -275,7 +254,7 @@ Most platforms provide embed codes or RSS feeds that integrate with WordPress, W
 
 ### With Podcast Directories
 
-Castopod and Podcast Generator generate standard RSS feeds for submission to Apple Podcasts, Spotify, Google Podcasts, and others. PeerTube can generate podcast feeds through plugins. Navidrome and Audiobookshelf do not support podcast directory distribution.
+Castopod generates standard RSS feeds for submission to Apple Podcasts, Spotify, Google Podcasts, and others. PeerTube can generate podcast feeds through plugins. Navidrome and Audiobookshelf do not support podcast directory distribution.
 
 ### With Transcription Workflows
 
@@ -309,9 +288,9 @@ ChurchApps provides native integration. Others typically integrate through RSS f
 ## Common Deployment Patterns
 
 **Pattern 1: Audio-Only Simple**
-- Podcast Generator on shared hosting
+- Castopod on a small VPS (1 GB RAM is enough)
 - Upload sermons weekly via web interface
-- Automatic RSS feed generation
+- Automatic RSS feed generation + listener analytics
 - Cost: $5-10/month
 
 **Pattern 2: Professional Podcast**
@@ -370,8 +349,8 @@ You've chosen well if:
 
 ## Last Updated
 
-2026-02-10
+2026-04-30
 
-**Version:** 1.0
+**Version:** 1.1
 **Maintainer:** PAI System / Seven
-**Next Review:** 2026-08-10 (6 months)
+**Next Review:** 2026-10-30 (6 months)
