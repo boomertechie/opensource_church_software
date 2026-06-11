@@ -19,6 +19,56 @@ There are two main approaches:
 1. **Dedicated Volunteer Schedulers** — Purpose-built for recurring ministry schedules
 2. **General Scheduling Tools** — Adapted for church use (Doodle-style polling)
 
+For a long time this category had no healthy dedicated option — the purpose-built projects below are abandoned or stale, leaving "adopt a full ChMS" or "use a spreadsheet" as the honest advice. As of mid-2026 the category has a maintained standalone entry: VoloRota.
+
+---
+
+## VoloRota
+
+**Status:** ✅ New — first release June 2026, actively developed
+
+**Skill Level:** Beginner (Docker)
+
+**True Cost:**
+- Software: Free (AGPL-3.0)
+- Hosting: $5-7/mo VPS (1GB RAM is plenty — runs in ~18MB)
+- Setup Time: ~10-30 minutes (timed walkthrough: clone to published schedule)
+- Ongoing Maintenance: Minimal (single container, SQLite, no external services beyond an SMTP relay)
+
+**What It Does:**
+Standalone volunteer/serving scheduler — the Planning Center Services scheduling niche, self-hosted. Define teams and roles, generate recurring services from templates, and auto-fill a fair rotation. Volunteers accept, decline, or arrange their own replacement from emailed magic links — no volunteer accounts or passwords.
+
+**Why Churches Use It:**
+- Every volunteer action happens from an emailed link on a phone — this addresses the most common complaint about commercial schedulers, forced volunteer accounts
+- Fair, explainable auto-fill: least-recently-served rotation honoring blockout dates, per-member role qualifications (your keys player is never scheduled on vocals), and no cross-team double-booking
+- Both scheduling models real churches use: individual rotation (nursery, sound) AND whole-crew rotation ("Worship Crew B has the 2nd Sunday")
+- Matrix view: services × role slots at a glance — the feature people miss most when leaving Planning Center
+- Decline-with-replacement: a declining volunteer picks their own cover from eligible teammates; the leader gets notified
+- ICS calendar feeds per volunteer, CSV export, printable schedules, per-service notes
+- No telemetry and no third-party requests on any page, enforced by the project's own test suite
+
+**Installation:**
+```bash
+docker run -d --name volorota \
+  -p 3000:3000 -v volorota_data:/data \
+  -e VOLOROTA_ADMIN_PASSWORD='pick-a-strong-password' \
+  volorota   # build from source — see the repo README
+```
+Docker Compose and a full deployment guide (including a Caddy/TLS demo stack) are in the repo.
+
+**Live Demo:** https://demo.volorota.org (resets hourly; admin password and volunteer links published at https://volorota.org)
+
+**Caveats:**
+- Young project (June 2026) — small community, no third-party plugin ecosystem yet
+- Single admin account in v1 (volunteers don't need accounts; co-admins share a password)
+- Email notifications only — no SMS (per-volunteer ICS feeds are the calendar bridge)
+- Scheduling only, by design: no check-in, giving, or member database — pair it with your ChMS
+- Disclosure: VoloRota is built and maintained by contributors to this guide
+
+**Links:**
+- Website + demo: https://volorota.org
+- GitHub: https://github.com/VoloRota/volorota
+
 ---
 
 ## OpenVolunteerPlatform
@@ -214,31 +264,33 @@ Full church management system with integrated volunteer scheduling, check-in, gr
 
 ## Comparison Matrix
 
-| Feature | Volunteer Planner | Rallly | ChurchApps |
-|---------|-------------------|--------|------------|
-| **Project Health** | ⚠️ Stale (2023) | ✅ Very active | ✅ Very active |
-| **Recurring Schedules** | ✅ | ❌ | ✅ |
-| **Self-Serve Swap** | ✅ | N/A | ✅ |
-| **Mobile Apps** | ❌ | ✅ (web) | ✅ (native) |
-| **Check-in Integration** | ❌ | ❌ | ✅ |
-| **Skill Level** | Intermediate | Beginner | Beginner |
-| **Setup Time** | 2-4 hrs | 30 min | 15 min (cloud) |
-| **Maintenance** | Medium | Low | Low/Medium |
+| Feature | VoloRota | Volunteer Planner | Rallly | ChurchApps |
+|---------|----------|-------------------|--------|------------|
+| **Project Health** | ✅ New, active (2026) | ⚠️ Stale (2023) | ✅ Very active | ✅ Very active |
+| **Recurring Schedules** | ✅ (individual + crew rotation) | ✅ | ❌ | ✅ |
+| **Self-Serve Swap** | ✅ (decline → pick replacement, no account) | ✅ | N/A | ✅ |
+| **Volunteer Accounts Needed** | ❌ never (magic links) | ✅ | ❌ | ✅ |
+| **Mobile Apps** | ✅ (mobile-first web) | ❌ | ✅ (web) | ✅ (native) |
+| **Check-in Integration** | ❌ (by design) | ❌ | ❌ | ✅ |
+| **Skill Level** | Beginner (Docker) | Intermediate | Beginner | Beginner |
+| **Setup Time** | 10-30 min | 2-4 hrs | 30 min | 15 min (cloud) |
+| **Maintenance** | Low | Medium | Low | Low/Medium |
 
 ---
 
 ## Recommendation by Church Size
 
 ### Church Plant (< 50 people)
-**Use:** Google Sheets/Calendar or Rallly
-- Simple, free, no setup
-- For recurring schedules: shared Google Sheet with volunteer preferences
+**Use:** Google Sheets/Calendar, Rallly, or VoloRota
+- Simple, free, no setup: shared Google Sheet with volunteer preferences
 - For events: Rallly cloud (free) or self-hosted
+- Already self-hosting a website? VoloRota adds real scheduling for one more container
 
 ### Small Church (50-200)
-**Use:** Volunteer Planner or ChurchApps Cloud
-- Volunteer Planner: If you want self-hosted control
-- ChurchApps Cloud: If you want all-in-one simplicity
+**Use:** VoloRota or ChurchApps Cloud
+- VoloRota: self-hosted, volunteers need no accounts; pair it with your existing ChMS
+- ChurchApps Cloud: all-in-one simplicity (scheduling + check-in + giving in one platform)
+- Volunteer Planner remains an option if you need its multi-site shift model, but it is stale
 
 ### Mid-Size Church (200-1000)
 **Use:** ChurchApps (self-hosted or cloud)

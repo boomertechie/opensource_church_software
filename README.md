@@ -114,7 +114,7 @@ Most churches need software for these common functions:
 
 **People & Ministry:**
 - Church Management Systems (ChurchCRM, ChurchApps, Jethro PMM)
-- Volunteer Scheduling (see [Volunteers guide](categories/volunteers/))
+- Volunteer Scheduling (VoloRota — see [Volunteers guide](categories/volunteers/))
 - Children's Check-In (see [Children's Ministry guide](categories/children/))
 
 **Media & Worship:**
@@ -205,7 +205,8 @@ A condensed list of free and open source tools by category. See category guides 
 - [Alf.io](https://github.com/alfio-event/alf.io) - Lighter-weight ticketing alternative
 
 ### Volunteer Management
-- See [Volunteers Guide](categories/volunteers/) for detailed options and DIY approaches
+- [VoloRota](https://github.com/VoloRota/volorota) - Self-hosted volunteer scheduling; magic-link volunteer flow, no accounts needed (live demo: [volorota.org](https://volorota.org))
+- See [Volunteers Guide](categories/volunteers/) for detailed comparisons and DIY approaches
 
 ### Children's Check-In
 - See [Children's Ministry Guide](categories/children/) for security-focused solutions
