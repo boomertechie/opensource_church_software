@@ -19,7 +19,7 @@ There are two main approaches:
 1. **Dedicated Volunteer Schedulers** — Purpose-built for recurring ministry schedules
 2. **General Scheduling Tools** — Adapted for church use (Doodle-style polling)
 
-For a long time this category had no healthy dedicated option — the purpose-built projects below are abandoned or stale, leaving "adopt a full ChMS" or "use a spreadsheet" as the honest advice. As of mid-2026 there is finally a maintained standalone entry: VoloRota.
+For a long time this category had no healthy dedicated option — the purpose-built projects below are abandoned or stale, leaving "adopt a full ChMS" or "use a spreadsheet" as the honest advice. As of mid-2026 the category has a maintained standalone entry: VoloRota.
 
 ---
 
@@ -36,16 +36,16 @@ For a long time this category had no healthy dedicated option — the purpose-bu
 - Ongoing Maintenance: Minimal (single container, SQLite, no external services beyond an SMTP relay)
 
 **What It Does:**
-Standalone volunteer/serving scheduler — the Planning Center Services scheduling niche, self-hosted. Define teams and roles, generate recurring services from templates, and auto-fill a fair rotation. Volunteers accept, decline, or arrange their own replacement from emailed magic links — **no volunteer accounts or passwords, ever**.
+Standalone volunteer/serving scheduler — the Planning Center Services scheduling niche, self-hosted. Define teams and roles, generate recurring services from templates, and auto-fill a fair rotation. Volunteers accept, decline, or arrange their own replacement from emailed magic links — no volunteer accounts or passwords.
 
 **Why Churches Use It:**
-- Zero-friction volunteer experience: every action happens from an emailed link on a phone — the #1 complaint about commercial schedulers (forced volunteer accounts), inverted
+- Every volunteer action happens from an emailed link on a phone — this addresses the most common complaint about commercial schedulers, forced volunteer accounts
 - Fair, explainable auto-fill: least-recently-served rotation honoring blockout dates, per-member role qualifications (your keys player is never scheduled on vocals), and no cross-team double-booking
 - Both scheduling models real churches use: individual rotation (nursery, sound) AND whole-crew rotation ("Worship Crew B has the 2nd Sunday")
 - Matrix view: services × role slots at a glance — the feature people miss most when leaving Planning Center
 - Decline-with-replacement: a declining volunteer picks their own cover from eligible teammates; the leader gets notified
 - ICS calendar feeds per volunteer, CSV export, printable schedules, per-service notes
-- Privacy by structure: no telemetry, zero third-party requests on any page (enforced by the project's own test suite)
+- No telemetry and no third-party requests on any page, enforced by the project's own test suite
 
 **Installation:**
 ```bash
@@ -288,7 +288,7 @@ Full church management system with integrated volunteer scheduling, check-in, gr
 
 ### Small Church (50-200)
 **Use:** VoloRota or ChurchApps Cloud
-- VoloRota: self-hosted control, zero volunteer accounts, scheduling done well — pair with your ChMS
+- VoloRota: self-hosted, volunteers need no accounts; pair it with your existing ChMS
 - ChurchApps Cloud: all-in-one simplicity (scheduling + check-in + giving in one platform)
 - Volunteer Planner remains an option if you need its multi-site shift model, but it is stale
 
