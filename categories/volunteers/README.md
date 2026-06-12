@@ -204,7 +204,7 @@ volumes:
 - Committee scheduling
 
 **When NOT to Use Rallly:**
-- Recurring weekly volunteer rotations (use Volunteer Planner or ChMS instead)
+- Recurring weekly volunteer rotations (use Volorota or ChMS instead)
 - Complex shift management with capacity limits
 - Organizations with 100+ recurring positions
 
