@@ -52,6 +52,7 @@ Detailed guides organized by church function:
 - [**Giving**](categories/giving/) - Donation platforms, giving management, financial tracking
 - [**Sermon & Media**](categories/sermon-media/) - Sermon hosting, podcasting, video management
 - [**Volunteers**](categories/volunteers/) - Scheduling, coordination, role management
+- [**Vacation Bible School**](categories/vbs/) - Registration recipe (Pretix), check-in, the honest landscape
 
 Each category guide includes:
 - Software comparisons with skill level and cost analysis
@@ -226,7 +227,7 @@ A condensed list of free and open source tools by category. See category guides 
 - [Collabora Online](https://www.collaboraoffice.com/) - LibreOffice in the browser
 
 ### Vacation Bible School
-- [Vacation Bible School System](https://github.com/prabhu-qea/Vacation-Bible-School-System) - Registration and management — ⚠️ Low activity (no non-bot commits since May 2025); functional but evaluate before depending on it
+- See the [VBS guide](categories/vbs/) — there is no healthy dedicated tool, and you don't need one: Pretix handles VBS registration well (full recipe in the guide)
 
 ### Password Management
 - [Vaultwarden](https://github.com/dani-garcia/vaultwarden) - Bitwarden server implementation
