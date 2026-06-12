@@ -1,0 +1,83 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches: [main]
+
+# Cancel any in-progress run for the same PR branch so we don't pile up.
+concurrency:
+  group: pr-checks-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # -------------------------------------------------------------------------
+  # Job 1: Internal link checker (offline — deterministic, no network flake)
+  # -------------------------------------------------------------------------
+  links-internal:
+    name: Internal link check (offline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check internal / relative links with lychee (offline)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # --offline: only check anchors and relative links, skip all http(s) URLs.
+          # --include-fragments: verify in-page anchors (#section) exist.
+          # Exclude nothing — all .md files in the repo are in scope.
+          args: >-
+            --offline
+            --include-fragments
+            --verbose
+            --no-progress
+            './**/*.md'
+          fail: true
+
+  # -------------------------------------------------------------------------
+  # Job 2: Docker Compose validation for all four deployment stacks
+  # -------------------------------------------------------------------------
+  compose-validate:
+    name: Validate Docker Compose stacks
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [starter, small-church, church-plant, privacy-first]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for deprecated top-level version key (${{ matrix.stack }})
+        # Warn only — other in-flight work removes these keys.
+        # grep exits 0 if found, 1 if not; invert so the step always passes
+        # but prints a visible notice when the key is present.
+        run: |
+          if grep -qE '^version:' deployments/${{ matrix.stack }}/docker-compose.yml; then
+            echo "::notice file=deployments/${{ matrix.stack }}/docker-compose.yml::Top-level 'version:' key is deprecated in Compose v2 — remove it when convenient."
+          fi
+
+      - name: Validate ${{ matrix.stack }} compose file
+        working-directory: deployments/${{ matrix.stack }}
+        run: |
+          cp .env.example .env
+          docker compose config -q
+
+  # -------------------------------------------------------------------------
+  # Job 3: Health script dry-run (proves the script itself never rots)
+  # -------------------------------------------------------------------------
+  health-script-dryrun:
+    name: Health script dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run health script in dry-run mode
+        env:
+          DRY_RUN: "1"
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/check_listed_repos.py
