@@ -138,7 +138,7 @@ Additional capabilities some churches need:
 - Event Registration Systems (Pretix)
 - Vacation Bible School Management
 
-Are we missing a category? [Suggest one here](https://github.com/meichthys/opensource_church_software/issues/new?title=Category%20Suggestion) or submit a pull request.
+Are we missing a category? [Suggest one here](https://github.com/boomertechie/opensource_church_software/issues/new?title=Category%20Suggestion) or submit a pull request. (The upstream repository this fork extends has been inactive since mid-2025 — suggestions are maintained here.)
 
 ---
 
@@ -226,7 +226,7 @@ A condensed list of free and open source tools by category. See category guides 
 - [Collabora Online](https://www.collaboraoffice.com/) - LibreOffice in the browser
 
 ### Vacation Bible School
-- [Vacation Bible School System](https://github.com/prabhu-qea/Vacation-Bible-School-System) - Registration and management
+- [Vacation Bible School System](https://github.com/prabhu-qea/Vacation-Bible-School-System) - Registration and management — ⚠️ Low activity (no non-bot commits since May 2025); functional but evaluate before depending on it
 
 ### Password Management
 - [Vaultwarden](https://github.com/dani-garcia/vaultwarden) - Bitwarden server implementation
