@@ -280,3 +280,9 @@ Churches without member portals must manually generate year-end statements and r
 **Last Updated:** 2026-02-10
 **Maintainer:** Open Source Church Software Project
 **License:** This guide is CC BY-SA 4.0
+
+## If self-hosting is too much
+
+- ChurchApps' hosted b1.church runs the same open-source giving module without you operating the server — payment-adjacent systems punish neglect hardest.
+- A narrow paid giving platform with clean export beats an unmaintained self-hosted one.
+- For very small congregations, recorded checks and a spreadsheet remain compliant and sane.

@@ -457,6 +457,13 @@ Self-hosted email servers (Postfix) get flagged as spam without proper configura
 - **Audit Logging:** Track who sends what to whom
 - **Spam Prevention:** Implement CAPTCHA on public signup forms
 
+
+## If self-hosting is too much
+
+- Pretix (above) offers official hosting at pretix.eu — same open-source software, no server to run.
+- A narrow paid newsletter service beats a self-hosted Listmonk nobody maintains; export your subscriber list regularly so you can leave.
+- A shared mailbox and a good announcement rhythm are fine while the list is small.
+
 ---
 
 *Last Updated: 2026-04-30 | Maintained by: church-tech-stack maintainers*

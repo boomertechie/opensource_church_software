@@ -357,6 +357,13 @@ Native volunteer module included — no integration needed.
 - Regular backups of volunteer contact information
 - Consider data retention policies (delete old records)
 
+
+## If self-hosting is too much
+
+- ChurchApps' hosted b1.church includes its volunteer module on the cloud free tier.
+- A narrow paid scheduler beats a spreadsheet that one person understands — and beats a server nobody patches.
+- Under ~50 people, the shared-sheet approach recommended above is genuinely fine.
+
 ---
 
 *Last Updated: 2026-04-30 | Maintained by: church-tech-stack maintainers*
