@@ -1,5 +1,3 @@
-version: "3.8"
-
 # Privacy-First Stack - Full Self-Hosted Setup
 # For churches prioritizing data sovereignty and privacy
 #
@@ -12,6 +10,7 @@ version: "3.8"
 # - Vaultwarden (password management)
 # - Uptime Kuma (monitoring)
 # - Duplicati (encrypted backups)
+# - Diun (image-update notifications)
 #
 # Requirements:
 # - 4GB RAM minimum, 8GB recommended
@@ -22,8 +21,17 @@ version: "3.8"
 
 services:
   # Traefik reverse proxy - handles SSL and routing
+  #
+  # IMPORTANT — docker.sock access: Traefik mounts /var/run/docker.sock to read
+  # container labels and route traffic automatically. This is standard practice but
+  # it grants Traefik significant control over the Docker host. Keep the image
+  # updated, limit who can SSH to this server, and treat Traefik as high-trust
+  # infrastructure. For those who want to reduce this exposure, docker-socket-proxy
+  # (github.com/Tecnativa/docker-socket-proxy) is a read-only intermediary that
+  # restricts which Docker API calls are permitted — it is an optional hardening
+  # step, not required to run this stack.
   traefik:
-    image: traefik:v2.10
+    image: traefik:v3.1
     container_name: privacy-first-traefik
     command:
       - "--providers.docker=true"
@@ -31,7 +39,7 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@example.com}"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?set ACME_EMAIL in .env}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
@@ -57,24 +65,26 @@ services:
 
   # WordPress - Church website
   wordpress:
-    image: wordpress:latest
+    image: wordpress:6.7
     container_name: privacy-first-wordpress
     environment:
       WORDPRESS_DB_HOST: wordpress-db
       WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:-changeme}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:?set WORDPRESS_DB_PASSWORD in .env}
       WORDPRESS_DB_NAME: wordpress
     volumes:
       - wordpress-data:/var/www/html
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.wordpress.rule=Host(`${WORDPRESS_DOMAIN:-www.example.com}`)"
+      - "traefik.http.routers.wordpress.rule=Host(`${WORDPRESS_DOMAIN:?set WORDPRESS_DOMAIN in .env}`)"
       - "traefik.http.routers.wordpress.entrypoints=websecure"
       - "traefik.http.routers.wordpress.tls.certresolver=letsencrypt"
       - "traefik.http.services.wordpress.loadbalancer.server.port=80"
       # Security headers
       - "traefik.http.middlewares.wordpress-headers.headers.stsSeconds=31536000"
       - "traefik.http.middlewares.wordpress-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.wordpress-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.wordpress-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
       - "traefik.http.routers.wordpress.middlewares=wordpress-headers"
     networks:
       - privacy-first
@@ -86,10 +96,10 @@ services:
     image: mysql:8.0
     container_name: privacy-first-wordpress-db
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wordpress
-      MYSQL_PASSWORD: ${WORDPRESS_DB_PASSWORD:-changeme}
+      MYSQL_PASSWORD: ${WORDPRESS_DB_PASSWORD:?set WORDPRESS_DB_PASSWORD in .env}
     volumes:
       - wordpress-db-data:/var/lib/mysql
     networks:
@@ -98,22 +108,31 @@ services:
     command: --default-authentication-plugin=mysql_native_password
 
   # ChurchCRM - Church Management
+  # ChurchCRM does not publish versioned image tags; pinned by digest to the last
+  # verified stable build. Run `docker manifest inspect churchcrm/crm:latest` after
+  # a ChurchCRM release announcement to get the new digest, then update this file.
   churchcrm:
-    image: churchcrm/crm:latest
+    image: churchcrm/crm:latest@sha256:97057d29145ee60ae3c1070315bfc69e1c9955b63841491c6c7650574daff9bc
     container_name: privacy-first-churchcrm
     environment:
       CRM_DB_HOST: churchcrm-db
       CRM_DB_NAME: churchcrm
       CRM_DB_USER: churchcrm
-      CRM_DB_PASS: ${CHURCHCRM_DB_PASSWORD:-changeme}
+      CRM_DB_PASS: ${CHURCHCRM_DB_PASSWORD:?set CHURCHCRM_DB_PASSWORD in .env}
     volumes:
       - churchcrm-data:/var/www/churchcrm
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.churchcrm.rule=Host(`${CHURCHCRM_DOMAIN:-crm.example.com}`)"
+      - "traefik.http.routers.churchcrm.rule=Host(`${CHURCHCRM_DOMAIN:?set CHURCHCRM_DOMAIN in .env}`)"
       - "traefik.http.routers.churchcrm.entrypoints=websecure"
       - "traefik.http.routers.churchcrm.tls.certresolver=letsencrypt"
       - "traefik.http.services.churchcrm.loadbalancer.server.port=80"
+      # Security headers
+      - "traefik.http.middlewares.churchcrm-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.churchcrm-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.churchcrm-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.churchcrm-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.churchcrm.middlewares=churchcrm-headers"
     networks:
       - privacy-first
     depends_on:
@@ -121,13 +140,13 @@ services:
     restart: unless-stopped
 
   churchcrm-db:
-    image: mariadb:10.6
+    image: mariadb:10.11
     container_name: privacy-first-churchcrm-db
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_2:-changeme2}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_2:?set MYSQL_ROOT_PASSWORD_2 in .env}
       MYSQL_DATABASE: churchcrm
       MYSQL_USER: churchcrm
-      MYSQL_PASSWORD: ${CHURCHCRM_DB_PASSWORD:-changeme}
+      MYSQL_PASSWORD: ${CHURCHCRM_DB_PASSWORD:?set CHURCHCRM_DB_PASSWORD in .env}
     volumes:
       - churchcrm-db-data:/var/lib/mysql
     networks:
@@ -136,16 +155,16 @@ services:
 
   # Nextcloud - File storage and collaboration
   nextcloud:
-    image: nextcloud:latest
+    image: nextcloud:29
     container_name: privacy-first-nextcloud
     environment:
       MYSQL_HOST: nextcloud-db
       MYSQL_DATABASE: nextcloud
       MYSQL_USER: nextcloud
-      MYSQL_PASSWORD: ${NEXTCLOUD_DB_PASSWORD:-changeme}
-      NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER:-admin}
-      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD:-changeme}
-      NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_DOMAIN:-cloud.example.com}
+      MYSQL_PASSWORD: ${NEXTCLOUD_DB_PASSWORD:?set NEXTCLOUD_DB_PASSWORD in .env}
+      NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER:?set NEXTCLOUD_ADMIN_USER in .env}
+      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD:?set NEXTCLOUD_ADMIN_PASSWORD in .env}
+      NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_DOMAIN:?set NEXTCLOUD_DOMAIN in .env}
       REDIS_HOST: nextcloud-redis
     volumes:
       - nextcloud-data:/var/www/html
@@ -154,14 +173,19 @@ services:
       - nextcloud-files:/var/www/html/data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_DOMAIN:-cloud.example.com}`)"
+      - "traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_DOMAIN:?set NEXTCLOUD_DOMAIN in .env}`)"
       - "traefik.http.routers.nextcloud.entrypoints=websecure"
       - "traefik.http.routers.nextcloud.tls.certresolver=letsencrypt"
       - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
+      # Security headers
+      - "traefik.http.middlewares.nextcloud-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.nextcloud-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.nextcloud-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.nextcloud-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
       # WebDAV fix
       - "traefik.http.middlewares.nextcloud-dav.replacepathregex.regex=^/.well-known/(card|cal)dav"
       - "traefik.http.middlewares.nextcloud-dav.replacepathregex.replacement=/remote.php/dav/"
-      - "traefik.http.routers.nextcloud.middlewares=nextcloud-dav"
+      - "traefik.http.routers.nextcloud.middlewares=nextcloud-headers,nextcloud-dav"
     networks:
       - privacy-first
     depends_on:
@@ -170,13 +194,13 @@ services:
     restart: unless-stopped
 
   nextcloud-db:
-    image: mariadb:10.6
+    image: mariadb:10.11
     container_name: privacy-first-nextcloud-db
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_3:-changeme3}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_3:?set MYSQL_ROOT_PASSWORD_3 in .env}
       MYSQL_DATABASE: nextcloud
       MYSQL_USER: nextcloud
-      MYSQL_PASSWORD: ${NEXTCLOUD_DB_PASSWORD:-changeme}
+      MYSQL_PASSWORD: ${NEXTCLOUD_DB_PASSWORD:?set NEXTCLOUD_DB_PASSWORD in .env}
     volumes:
       - nextcloud-db-data:/var/lib/mysql
     networks:
@@ -184,7 +208,7 @@ services:
     restart: unless-stopped
 
   nextcloud-redis:
-    image: redis:alpine
+    image: redis:7-alpine
     container_name: privacy-first-nextcloud-redis
     volumes:
       - nextcloud-redis-data:/data
@@ -194,36 +218,41 @@ services:
 
   # OnlyOffice - Document editing
   onlyoffice:
-    image: onlyoffice/documentserver:latest
+    image: onlyoffice/documentserver:8.2
     container_name: privacy-first-onlyoffice
     environment:
-      JWT_SECRET: ${ONLYOFFICE_JWT_SECRET:-changeme}
+      JWT_SECRET: ${ONLYOFFICE_JWT_SECRET:?set ONLYOFFICE_JWT_SECRET in .env}
       JWT_ENABLED: "true"
     volumes:
       - onlyoffice-data:/var/www/onlyoffice/Data
       - onlyoffice-logs:/var/log/onlyoffice
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.onlyoffice.rule=Host(`${ONLYOFFICE_DOMAIN:-office.example.com}`)"
+      - "traefik.http.routers.onlyoffice.rule=Host(`${ONLYOFFICE_DOMAIN:?set ONLYOFFICE_DOMAIN in .env}`)"
       - "traefik.http.routers.onlyoffice.entrypoints=websecure"
       - "traefik.http.routers.onlyoffice.tls.certresolver=letsencrypt"
       - "traefik.http.services.onlyoffice.loadbalancer.server.port=80"
+      # Security headers
+      - "traefik.http.middlewares.onlyoffice-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.onlyoffice-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.onlyoffice-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.onlyoffice.middlewares=onlyoffice-headers"
     networks:
       - privacy-first
     restart: unless-stopped
 
   # Listmonk - Email newsletters
   listmonk:
-    image: listmonk/listmonk:latest
+    image: listmonk/listmonk:v4.1.0
     container_name: privacy-first-listmonk
     environment:
       LISTMONK_app__address: "0.0.0.0:9000"
-      LISTMONK_app__admin_username: ${LISTMONK_ADMIN_USER:-admin}
-      LISTMONK_app__admin_password: ${LISTMONK_ADMIN_PASSWORD:-changeme}
+      LISTMONK_app__admin_username: ${LISTMONK_ADMIN_USER:?set LISTMONK_ADMIN_USER in .env}
+      LISTMONK_app__admin_password: ${LISTMONK_ADMIN_PASSWORD:?set LISTMONK_ADMIN_PASSWORD in .env}
       LISTMONK_db__host: listmonk-db
       LISTMONK_db__port: "5432"
       LISTMONK_db__user: listmonk
-      LISTMONK_db__password: ${LISTMONK_DB_PASSWORD:-changeme}
+      LISTMONK_db__password: ${LISTMONK_DB_PASSWORD:?set LISTMONK_DB_PASSWORD in .env}
       LISTMONK_db__database: listmonk
       LISTMONK_db__ssl_mode: disable
       TZ: ${TZ:-America/New_York}
@@ -231,10 +260,15 @@ services:
       - listmonk-data:/listmonk/uploads
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.listmonk.rule=Host(`${LISTMONK_DOMAIN:-news.example.com}`)"
+      - "traefik.http.routers.listmonk.rule=Host(`${LISTMONK_DOMAIN:?set LISTMONK_DOMAIN in .env}`)"
       - "traefik.http.routers.listmonk.entrypoints=websecure"
       - "traefik.http.routers.listmonk.tls.certresolver=letsencrypt"
       - "traefik.http.services.listmonk.loadbalancer.server.port=9000"
+      # Security headers
+      - "traefik.http.middlewares.listmonk-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.listmonk-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.listmonk-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.listmonk.middlewares=listmonk-headers"
     networks:
       - privacy-first
     depends_on:
@@ -246,7 +280,7 @@ services:
     image: postgres:15-alpine
     container_name: privacy-first-listmonk-db
     environment:
-      POSTGRES_PASSWORD: ${LISTMONK_DB_PASSWORD:-changeme}
+      POSTGRES_PASSWORD: ${LISTMONK_DB_PASSWORD:?set LISTMONK_DB_PASSWORD in .env}
       POSTGRES_USER: listmonk
       POSTGRES_DB: listmonk
     volumes:
@@ -273,6 +307,11 @@ services:
       - "traefik.http.routers.jitsi.entrypoints=websecure"
       - "traefik.http.routers.jitsi.tls.certresolver=letsencrypt"
       - "traefik.http.services.jitsi.loadbalancer.server.port=80"
+      # Security headers
+      - "traefik.http.middlewares.jitsi-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.jitsi-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.jitsi-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.jitsi.middlewares=jitsi-headers"
     networks:
       privacy-first:
         aliases:
@@ -339,49 +378,60 @@ services:
 
   # Vaultwarden - Password management
   vaultwarden:
-    image: vaultwarden/server:latest
+    image: vaultwarden/server:1.33.2
     container_name: privacy-first-vaultwarden
     environment:
       SIGNUPS_ALLOWED: ${VAULTWARDEN_SIGNUPS:-false}
-      ADMIN_TOKEN: ${VAULTWARDEN_ADMIN_TOKEN:-changeme}
-      DOMAIN: https://${VAULTWARDEN_DOMAIN:-pass.example.com}
-      SMTP_HOST: ${SMTP_HOST:-mail.example.com}
+      ADMIN_TOKEN: ${VAULTWARDEN_ADMIN_TOKEN:?set VAULTWARDEN_ADMIN_TOKEN in .env}
+      DOMAIN: https://${VAULTWARDEN_DOMAIN:?set VAULTWARDEN_DOMAIN in .env}
+      SMTP_HOST: ${SMTP_HOST:?set SMTP_HOST in .env}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_SECURITY: ${SMTP_SECURE:-starttls}
-      SMTP_USERNAME: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_FROM: noreply@${MAIL_DOMAIN:-example.com}
+      SMTP_USERNAME: ${SMTP_USER:?set SMTP_USER in .env}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?set SMTP_PASSWORD in .env}
+      SMTP_FROM: noreply@${MAIL_DOMAIN:?set MAIL_DOMAIN in .env}
     volumes:
       - vaultwarden-data:/data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.vaultwarden.rule=Host(`${VAULTWARDEN_DOMAIN:-pass.example.com}`)"
+      - "traefik.http.routers.vaultwarden.rule=Host(`${VAULTWARDEN_DOMAIN:?set VAULTWARDEN_DOMAIN in .env}`)"
       - "traefik.http.routers.vaultwarden.entrypoints=websecure"
       - "traefik.http.routers.vaultwarden.tls.certresolver=letsencrypt"
       - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
+      # Security headers
+      - "traefik.http.middlewares.vaultwarden-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.vaultwarden-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.vaultwarden-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.vaultwarden-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.vaultwarden.middlewares=vaultwarden-headers"
     networks:
       - privacy-first
     restart: unless-stopped
 
   # Uptime Kuma - Monitoring
   uptime-kuma:
-    image: louislam/uptime-kuma:latest
+    image: louislam/uptime-kuma:1
     container_name: privacy-first-uptime-kuma
     volumes:
       - uptime-kuma-data:/app/data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.uptime-kuma.rule=Host(`${UPTIME_DOMAIN:-status.example.com}`)"
+      - "traefik.http.routers.uptime-kuma.rule=Host(`${UPTIME_DOMAIN:?set UPTIME_DOMAIN in .env}`)"
       - "traefik.http.routers.uptime-kuma.entrypoints=websecure"
       - "traefik.http.routers.uptime-kuma.tls.certresolver=letsencrypt"
       - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
+      # Security headers
+      - "traefik.http.middlewares.uptime-kuma-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.uptime-kuma-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.uptime-kuma-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.uptime-kuma.middlewares=uptime-kuma-headers"
     networks:
       - privacy-first
     restart: unless-stopped
 
   # Duplicati - Encrypted backups
   duplicati:
-    image: lscr.io/linuxserver/duplicati:latest
+    image: lscr.io/linuxserver/duplicati:2.3.0
     container_name: privacy-first-duplicati
     environment:
       - PUID=1000
@@ -398,21 +448,26 @@ services:
       - listmonk-data:/source/listmonk:ro
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.duplicati.rule=Host(`${DUPLICATI_DOMAIN:-backup.example.com}`)"
+      - "traefik.http.routers.duplicati.rule=Host(`${DUPLICATI_DOMAIN:?set DUPLICATI_DOMAIN in .env}`)"
       - "traefik.http.routers.duplicati.entrypoints=websecure"
       - "traefik.http.routers.duplicati.tls.certresolver=letsencrypt"
       - "traefik.http.services.duplicati.loadbalancer.server.port=8200"
+      # Security headers
+      - "traefik.http.middlewares.duplicati-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.duplicati-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.duplicati-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.duplicati.middlewares=duplicati-headers"
     networks:
       - privacy-first
     restart: unless-stopped
 
-  # Diun - Image-update notifications (replaced archived containrrr/watchtower in 2026).
+  # Diun - Image-update notifications.
   # Diun does NOT auto-update containers — it emails when a watched image has a new
   # tag, and an admin applies the update manually. This is the right default for
-  # privacy-conscious deployments where stability matters more than cutting-edge
-  # version churn.
+  # privacy-conscious deployments where stability matters more than chasing updates.
+  # After a notification: docker compose pull && docker compose up -d
   diun:
-    image: crazymax/diun:latest
+    image: ghcr.io/crazy-max/diun:4.33.0
     container_name: privacy-first-diun
     command: serve
     volumes:
@@ -422,7 +477,7 @@ services:
       - TZ=${TZ:-America/New_York}
       - LOG_LEVEL=info
       - DIUN_WATCH_WORKERS=10
-      - DIUN_WATCH_SCHEDULE=0 8 * * 1  # Weekly (Monday 08:00 local)
+      - DIUN_WATCH_SCHEDULE=0 8 * * 1
       - DIUN_PROVIDERS_DOCKER=true
       - DIUN_NOTIF_MAIL_HOST=${DIUN_EMAIL_SERVER:-smtp.example.com}
       - DIUN_NOTIF_MAIL_PORT=${DIUN_EMAIL_PORT:-587}

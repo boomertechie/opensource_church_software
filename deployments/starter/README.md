@@ -2,6 +2,23 @@
 
 > Get your church online with member management, a website, newsletters, and secure password sharing — in about an hour.
 
+---
+
+## Before You Deploy — Six Questions
+
+Answer these before running a single command. If no one owns the answers, use a hosted service instead (see the category guides' "If self-hosting is too much" sections).
+
+1. **Who will patch this stack monthly?**
+2. **Who gets alerted when something breaks at 2 AM?**
+3. **Where are backups stored, and are they off this server?**
+4. **Has anyone actually tested restoring from those backups?**
+5. **What paid product does this replace, and what does it cost?**
+6. **Is the money saved worth the time this will take to maintain?**
+
+If no one owns those answers, use hosted tools. Self-hosting is not automatically more faithful, cheaper, or safer.
+
+---
+
 ## What You Get
 
 | Tool | What It Does | Replaces |
@@ -19,6 +36,15 @@
 - A VPS with 2GB RAM ($10-12/month) running Ubuntu 22.04
 - About 1 hour for initial setup
 - Basic comfort with command line (copy/paste is fine)
+
+## Update Policy
+
+This stack pins images to stable version tags (e.g., `wordpress:6.7`). Pinning means you get a predictable, tested version instead of an unknown update landing silently at midnight.
+
+**How to stay updated:**
+- Run [Diun](https://github.com/crazy-max/diun) (recommended in the root guide) to get email notifications when a new image tag is published.
+- When you receive a notification, schedule a maintenance window, take a backup, then run `docker compose pull && docker compose up -d`.
+- Never update on Saturday night or Sunday morning.
 
 ## Setup Guide
 
@@ -92,12 +118,14 @@ nano .env
 
 Update these values:
 - Replace `yourchurch.com` with your actual domain
-- Replace `CHANGE_ME_X` passwords with strong passwords
+- Fill in all password fields (leave none blank)
 
 To generate strong passwords, open a new terminal and run:
 ```bash
 openssl rand -base64 24
 ```
+
+Run it once for each password field. Do not reuse the same password across fields.
 
 Save the file: Press `Ctrl+X`, then `Y`, then `Enter`.
 
@@ -112,14 +140,14 @@ Wait 2-3 minutes for everything to start. Check status with:
 docker compose ps
 ```
 
-All services should show "running".
+All services should show "running". If any show "exited", check logs with `docker compose logs <service-name>`.
 
 ### Step 8: Complete Setup for Each Service
 
 **WordPress** (https://www.yourchurch.com)
 1. Follow the setup wizard
-2. Pick a theme (search "flavor starter theme" for good ones)
-3. Recommended plugins: Jewtify (sermons) and The Events Calendar
+2. Pick a theme
+3. Recommended plugins: Sermon Manager and The Events Calendar
 
 **ChurchCRM** (https://members.yourchurch.com)
 1. Create your admin account
@@ -178,11 +206,12 @@ Paste this:
 
 ```bash
 #!/bin/bash
+set -euo pipefail
 DATE=$(date +%Y%m%d)
 BACKUP_DIR="/opt/church/backups"
 mkdir -p $BACKUP_DIR
 
-# Backup all data
+# Backup all file volumes
 docker run --rm \
   -v starter_wordpress-data:/source/wordpress:ro \
   -v starter_churchcrm-data:/source/churchcrm:ro \
@@ -212,19 +241,70 @@ chmod +x /opt/church/backup.sh
 (crontab -l 2>/dev/null; echo "0 2 * * * /opt/church/backup.sh") | crontab -
 ```
 
-**Important:** Copy backups offsite! Use `scp` to copy to another computer or set up automatic sync to Backblaze B2 ($5/month for plenty of storage).
+**Important:** Copy backups off this server. Use `scp` to copy to another computer, or set up automatic sync to Backblaze B2 ($5/month for plenty of storage). A backup that lives only on the same server you are trying to recover is not a real backup.
 
-## Updates
+## Restore (test this BEFORE you need it)
 
-Update your services monthly:
+A backup you have never restored is a hope, not a plan. Run through this on a test server or a fresh directory before disaster strikes.
+
+### Restore WordPress
 
 ```bash
 cd /opt/church
-docker compose pull
+
+# 1. Stop the stack
+docker compose down
+
+# 2. Restore file volume
+docker run --rm \
+  -v starter_wordpress-data:/data \
+  -v /opt/church/backups:/backup \
+  alpine sh -c "cd /data && tar xzf /backup/church-backup-YYYYMMDD.tar.gz ./wordpress"
+
+# 3. Restore database
+docker compose up -d wordpress-db
+sleep 10
+docker exec -i starter-wordpress-db mysql -u wordpress -p${WORDPRESS_DB_PASSWORD} wordpress \
+  < /opt/church/backups/wordpress-YYYYMMDD.sql
+
+# 4. Start everything
 docker compose up -d
+
+# 5. Verify: open https://www.yourchurch.com and log in
 ```
 
-Update WordPress plugins through the WordPress admin panel.
+### Restore ChurchCRM
+
+```bash
+# Same pattern — restore the churchcrm volume and database
+docker run --rm \
+  -v starter_churchcrm-data:/data \
+  -v /opt/church/backups:/backup \
+  alpine sh -c "cd /data && tar xzf /backup/church-backup-YYYYMMDD.tar.gz ./churchcrm"
+
+docker exec -i starter-churchcrm-db mysql -u churchcrm -p${CHURCHCRM_DB_PASSWORD} churchcrm \
+  < /opt/church/backups/churchcrm-YYYYMMDD.sql
+
+# Verify: open https://members.yourchurch.com and log in
+```
+
+### Restore Listmonk
+
+```bash
+docker run --rm \
+  -v starter_listmonk-data:/data \
+  -v /opt/church/backups:/backup \
+  alpine sh -c "cd /data && tar xzf /backup/church-backup-YYYYMMDD.tar.gz ./listmonk"
+
+docker exec -i starter-listmonk-db psql -U listmonk listmonk \
+  < /opt/church/backups/listmonk-YYYYMMDD.sql
+
+# Verify: open https://news.yourchurch.com and confirm subscriber lists exist
+```
+
+## Updates
+
+See the **Update Policy** section above. This stack does not auto-update — you apply updates manually after a backup.
 
 ## Troubleshooting
 

@@ -1,12 +1,10 @@
-version: "3.8"
-
 # Church Plant Stack - Minimal Setup
 # For new churches with no budget and a volunteer running tech
-# 
+#
 # What's Included:
 # - WordPress (website)
 # - ChurchCRM (basic ChMS)
-# - Adminer (database management)
+# - Adminer (database management — opt-in only, see below)
 #
 # Requirements:
 # - 1GB RAM minimum, 2GB recommended
@@ -15,8 +13,14 @@ version: "3.8"
 
 services:
   # Traefik reverse proxy - handles SSL and routing
+  # NOTE: Traefik mounts /var/run/docker.sock, which lets it read container labels and
+  # route traffic automatically. This is standard practice but it means Traefik has
+  # elevated access to the Docker host. Keep the image updated and treat Traefik as
+  # high-trust infrastructure. If you want to reduce that exposure, look into
+  # docker-socket-proxy (a read-only intermediary) — but that is an optional hardening
+  # step, not required for most churches.
   traefik:
-    image: traefik:v2.10
+    image: traefik:v3.1
     container_name: church-plant-traefik
     command:
       - "--providers.docker=true"
@@ -24,7 +28,7 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@example.com}"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?set ACME_EMAIL in .env}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
@@ -40,21 +44,27 @@ services:
 
   # WordPress - Church website
   wordpress:
-    image: wordpress:latest
+    image: wordpress:6.7
     container_name: church-plant-wordpress
     environment:
       WORDPRESS_DB_HOST: wordpress-db
       WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:-changeme}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:?set WORDPRESS_DB_PASSWORD in .env}
       WORDPRESS_DB_NAME: wordpress
     volumes:
       - wordpress-data:/var/www/html
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.wordpress.rule=Host(`${WORDPRESS_DOMAIN:-church.example.com}`)"
+      - "traefik.http.routers.wordpress.rule=Host(`${WORDPRESS_DOMAIN:?set WORDPRESS_DOMAIN in .env}`)"
       - "traefik.http.routers.wordpress.entrypoints=websecure"
       - "traefik.http.routers.wordpress.tls.certresolver=letsencrypt"
       - "traefik.http.services.wordpress.loadbalancer.server.port=80"
+      # Security headers
+      - "traefik.http.middlewares.wordpress-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.wordpress-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.wordpress-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.wordpress-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.wordpress.middlewares=wordpress-headers"
     networks:
       - church-plant
     depends_on:
@@ -66,10 +76,10 @@ services:
     image: mysql:8.0
     container_name: church-plant-wordpress-db
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wordpress
-      MYSQL_PASSWORD: ${WORDPRESS_DB_PASSWORD:-changeme}
+      MYSQL_PASSWORD: ${WORDPRESS_DB_PASSWORD:?set WORDPRESS_DB_PASSWORD in .env}
     volumes:
       - wordpress-db-data:/var/lib/mysql
     networks:
@@ -77,23 +87,32 @@ services:
     restart: unless-stopped
 
   # ChurchCRM - Church Management
+  # ChurchCRM does not publish versioned image tags; pinned by digest to the last
+  # verified stable build. Run `docker manifest inspect churchcrm/crm:latest` after
+  # a ChurchCRM release announcement to get the new digest, then update this file.
   churchcrm:
-    image: churchcrm/crm:latest
+    image: churchcrm/crm:latest@sha256:97057d29145ee60ae3c1070315bfc69e1c9955b63841491c6c7650574daff9bc
     container_name: church-plant-churchcrm
     environment:
       CRM_DB_HOST: churchcrm-db
       CRM_DB_NAME: churchcrm
       CRM_DB_USER: churchcrm
-      CRM_DB_PASS: ${CHURCHCRM_DB_PASSWORD:-changeme}
+      CRM_DB_PASS: ${CHURCHCRM_DB_PASSWORD:?set CHURCHCRM_DB_PASSWORD in .env}
       CRM_DB_PORT: "3306"
     volumes:
       - churchcrm-data:/var/www/churchcrm
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.churchcrm.rule=Host(`${CHURCHCRM_DOMAIN:-crm.church.example.com}`)"
+      - "traefik.http.routers.churchcrm.rule=Host(`${CHURCHCRM_DOMAIN:?set CHURCHCRM_DOMAIN in .env}`)"
       - "traefik.http.routers.churchcrm.entrypoints=websecure"
       - "traefik.http.routers.churchcrm.tls.certresolver=letsencrypt"
       - "traefik.http.services.churchcrm.loadbalancer.server.port=80"
+      # Security headers
+      - "traefik.http.middlewares.churchcrm-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.churchcrm-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.churchcrm-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.churchcrm-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.churchcrm.middlewares=churchcrm-headers"
     networks:
       - church-plant
     depends_on:
@@ -102,31 +121,41 @@ services:
 
   # ChurchCRM Database
   churchcrm-db:
-    image: mariadb:10.6
+    image: mariadb:10.11
     container_name: church-plant-churchcrm-db
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_2:-changeme2}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD_2:?set MYSQL_ROOT_PASSWORD_2 in .env}
       MYSQL_DATABASE: churchcrm
       MYSQL_USER: churchcrm
-      MYSQL_PASSWORD: ${CHURCHCRM_DB_PASSWORD:-changeme}
+      MYSQL_PASSWORD: ${CHURCHCRM_DB_PASSWORD:?set CHURCHCRM_DB_PASSWORD in .env}
     volumes:
       - churchcrm-db-data:/var/lib/mysql
     networks:
       - church-plant
     restart: unless-stopped
 
-  # Adminer - Database management (optional)
+  # Adminer - Database management (opt-in only)
+  #
+  # A database admin panel left running permanently is an attractive target — it
+  # provides direct read/write access to every table in both databases and only
+  # basic-auth stands between it and the internet. Start it only when you need to
+  # inspect or repair data, then stop it immediately when finished.
+  #
+  # Start:  docker compose --profile adminer up -d adminer
+  # Stop:   docker compose stop adminer
   adminer:
-    image: adminer:latest
+    image: adminer:4
     container_name: church-plant-adminer
+    profiles: ["adminer"]
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.adminer.rule=Host(`${ADMINER_DOMAIN:-db.church.example.com}`)"
+      - "traefik.http.routers.adminer.rule=Host(`${ADMINER_DOMAIN:?set ADMINER_DOMAIN in .env}`)"
       - "traefik.http.routers.adminer.entrypoints=websecure"
       - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
       - "traefik.http.services.adminer.loadbalancer.server.port=8080"
-      # Basic auth protection
-      - "traefik.http.middlewares.adminer-auth.basicauth.users=${ADMINER_AUTH:-admin:$$apr1$$H6uskkkW$$IgXLP6ewTrSuBkTrqE8wj/}"
+      # Basic auth protection — generate a new hash before use:
+      #   htpasswd -nb admin yourpassword | sed -e 's/\$/\$\$/g'
+      - "traefik.http.middlewares.adminer-auth.basicauth.users=${ADMINER_AUTH:?set ADMINER_AUTH in .env}"
       - "traefik.http.routers.adminer.middlewares=adminer-auth"
     networks:
       - church-plant
