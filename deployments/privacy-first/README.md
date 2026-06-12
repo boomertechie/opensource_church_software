@@ -89,8 +89,8 @@ Configure these DNS records pointing to your server IP:
 
 ```bash
 # Download and configure
-curl -o docker-compose.yml https://raw.githubusercontent.com/church-tech-stack/main/stacks/privacy-first/docker-compose.yml
-curl -o .env.example https://raw.githubusercontent.com/church-tech-stack/main/stacks/privacy-first/.env.example
+curl -o docker-compose.yml https://raw.githubusercontent.com/boomertechie/opensource_church_software/main/deployments/privacy-first/docker-compose.yml
+curl -o .env.example https://raw.githubusercontent.com/boomertechie/opensource_church_software/main/deployments/privacy-first/.env.example
 cp .env.example .env
 
 # Edit .env with your domains and secure passwords
