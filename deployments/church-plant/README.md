@@ -43,10 +43,10 @@ mkdir -p ~/church-plant && cd ~/church-plant
 
 ```bash
 # Download docker-compose.yml
-curl -o docker-compose.yml https://raw.githubusercontent.com/church-tech-stack/main/stacks/church-plant/docker-compose.yml
+curl -o docker-compose.yml https://raw.githubusercontent.com/boomertechie/opensource_church_software/main/deployments/church-plant/docker-compose.yml
 
 # Download environment template
-curl -o .env.example https://raw.githubusercontent.com/church-tech-stack/main/stacks/church-plant/.env.example
+curl -o .env.example https://raw.githubusercontent.com/boomertechie/opensource_church_software/main/deployments/church-plant/.env.example
 cp .env.example .env
 ```
 

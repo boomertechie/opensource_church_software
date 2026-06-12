@@ -77,8 +77,8 @@ apt install docker-compose-plugin -y
 mkdir -p /opt/church && cd /opt/church
 
 # Download the configuration files
-curl -O https://raw.githubusercontent.com/church-tech-stack/main/stacks/starter/docker-compose.yml
-curl -O https://raw.githubusercontent.com/church-tech-stack/main/stacks/starter/.env.example
+curl -O https://raw.githubusercontent.com/boomertechie/opensource_church_software/main/deployments/starter/docker-compose.yml
+curl -O https://raw.githubusercontent.com/boomertechie/opensource_church_software/main/deployments/starter/.env.example
 
 # Create your configuration file
 cp .env.example .env
