@@ -354,3 +354,9 @@ You've chosen well if:
 **Version:** 1.1
 **Maintainer:** PAI System / Seven
 **Next Review:** 2026-10-30 (6 months)
+
+## If self-hosting is too much
+
+- Castopod (above) offers official managed hosting — the same Podcasting 2.0 features without the server.
+- A narrow paid podcast host with RSS portability beats a stale self-hosted archive; your feed URL and audio files are what matter, keep them exportable.
+- A simple YouTube/podcast-app presence is fine while the archive is small — just keep your own copies of the files.

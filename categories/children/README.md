@@ -473,6 +473,13 @@ CREATE TABLE services (
 - Consider ChMS import for long-term storage
 - Keep family records synced manually or via API
 
+
+## If self-hosting is too much
+
+- ChurchApps' hosted b1.church has a free tier with the same check-in module described above — the open-source escape hatch stays open if you outgrow it.
+- A narrow paid check-in product beats a self-hosted one nobody patches; children's data deserves a maintained system.
+- Under ~50 people, the paper sign-in sheet recommended above remains the honest answer.
+
 ---
 
 *Last Updated: 2026-02-03 | Maintained by: church-tech-stack maintainers*
