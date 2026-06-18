@@ -1,0 +1,28 @@
+# Tier classifications for listed-repo health checks.
+#
+# Format: <tier> <owner/repo>   (one entry per line, case-insensitive)
+# Tiers:
+#   recommended  — default for all repos; checked and flagged normally.
+#   historical   — upstream / predecessor repos credited for provenance; informational only.
+#   archaeology  — repos explicitly called out as abandoned in the docs; informational only.
+#
+# Only `recommended` repos can trigger flags in the health report.
+# historical and archaeology repos appear under their own collapsed headings.
+#
+# You generally do NOT need to add repos here:
+#   • repos under a "Not Recommended", "⛔", or "for archaeology only" heading are
+#     auto-classified as archaeology by the script's heuristic.
+#   • Add explicit entries when a repo's surrounding text does not trigger the
+#     heuristic but should still be exempt from flagging.
+
+# --- historical ---
+# Upstream repo this guide forks from; credited on every run but not evaluated.
+historical meichthys/opensource_church_software
+historical meichthys/christian_foss
+
+# --- archaeology ---
+# Explicitly-abandoned projects documented for historical context only.
+archaeology aerogear/OpenVolunteerPlatform
+archaeology Attendize/Attendize
+archaeology Mailtrain-org/mailtrain
+archaeology PodcastGenerator/PodcastGenerator

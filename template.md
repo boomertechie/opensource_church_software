@@ -1,85 +1,47 @@
+# Entry Template
+
+Copy this structure when adding a tool to a category guide. The format matches existing entries — consistency is what keeps the guides scannable and the [health checks](scripts/check_listed_repos.py) meaningful.
+
+Statuses: `✅ Active` (verified date), `✅ New` (first release within a year), `⚠️ Stale` (no meaningful commits in 1–3 years), `⚠️ Low activity`, `⛔ Not Recommended — Abandoned/Archived` (keep the entry with reasons and a successor; readers search for dead projects too).
+
+```markdown
 ## Tool Name
 
-**Status:** ✅ Active (last commit: YYYY-MM-DD)
+**Status:** ✅ Active (verified YYYY-MM-DD)
 
-**Skill Level:** Beginner | Intermediate | Advanced
+**Skill Level:** Beginner / Intermediate / Advanced
 
-**True Cost:** 
-- Software: Free (License: MIT/GPL/Apache)
-- Hosting: $X/month [VPS/Cloud/None]
-- Setup Time: X hours
-- Maintenance: X hours/month
+**License:** MIT / GPL-3.0 / AGPL-3.0 / …
+
+**Hosting model:** Self-hosted / Hosted / Both
+
+**True Cost:**
+- Software: Free
+- Hosting: $X–Y/mo VPS (RAM needed)
+- Setup Time: realistic estimate
+- Ongoing Maintenance: hours/month, honestly
 
 **What It Does:**
-One clear sentence describing the problem this solves for churches.
+Two or three sentences. What problem it solves, for whom.
 
 **Why Churches Use It:**
-- Benefit 1 (specific, not "it's free")
-- Benefit 2 (time saved, capability gained)
-- Benefit 3 (integration, ease of use)
+- Concrete capabilities, not adjectives
+- Things a church would actually notice
 
-**Church Use Cases:**
-- **Small church (50-200):** How they typically use it
-- **Medium church (200-1000):** Scaling considerations
-- **Multi-site:** Distribution/collaboration features
+**Installation:**
+The shortest real path (Docker preferred). Link to upstream docs for the rest.
 
-**Installation Options:**
-
-### Option A: Docker (Recommended)
-```bash
-docker run -d -p 8080:80 --name toolname toolname/toolname
-```
-
-### Option B: Cloud One-Click
-[![Deploy to Railway](https://railway.app/button.svg)](https://railway.app/template/XXX)
-
-### Option C: Self-Hosted
-See [detailed deployment guide](../deployments/docker-compose/toolname/)
-
-**Configuration:**
-Key settings churches care about:
-- Setting 1: What it does, recommended value
-- Setting 2: What it does, recommended value
-
-**Data Migration:**
-Can you import from [Popular Commercial Tool]?
-- ✅ Yes — via CSV/API/tool
-- ⚠️ Partial — manual steps required
-- ❌ No — start fresh
-
-**Alternatives:**
-| Tool | Choose When... | Avoid When... |
-|------|----------------|---------------|
-| [Alt 1](link) | Specific use case | Limitation |
-| [Alt 2](link) | Specific use case | Limitation |
-
-**Integrations:**
-- [Tool 1](link) — How they connect
-- [Tool 2](link) — How they connect
-
-**Security Considerations:**
-- Default admin credentials: change immediately
-- SSL/HTTPS: Required for production
-- Backup strategy: [recommendation]
-
-**Known Limitations:**
-- Limitation 1 and workaround
-- Limitation 2 and workaround
-
-**Community:**
-- GitHub Issues: https://github.com/owner/repo/issues
-- Discord/Slack: [invite link]
-- Forum: [link]
+**Caveats:**
+- What will frustrate a volunteer techie
+- Where it falls short of the commercial equivalent
+- Disclose any maintainer affiliation with this guide
 
 **Links:**
-- Website: https://
-- GitHub: https://github.com/
-- Demo: https://
-- Docs: https://
+- Website:
+- GitHub:
+- Docs:
+```
 
-**Screenshots:**
-![Description](assets/toolname-screenshot.png)
+Optional sections when they earn their space: **Best for / Avoid if** (when the fit is genuinely narrow), **Security notes** (anything handling children's data, payments, or credentials), **Comparison matrix row** (add the tool to the category's matrix if one exists).
 
----
-*Added: YYYY-MM-DD | Last Verified: YYYY-MM-DD*
-*Maintainer: @username | Church Size Using: X*
+Before submitting: test the install path on a clean machine, verify the project's activity yourself (don't trust its README), and state version/date for anything that will rot.

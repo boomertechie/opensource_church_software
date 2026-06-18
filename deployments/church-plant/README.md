@@ -2,14 +2,37 @@
 
 > Zero-budget, minimal setup for new churches. One domain, one weekend.
 
+---
+
+## Before You Deploy — Six Questions
+
+Answer these before running a single command. If no one owns the answers, use a hosted service instead (see the category guides' "If self-hosting is too much" sections).
+
+1. **Who will patch this stack monthly?**
+2. **Who gets alerted when something breaks at 2 AM?**
+3. **Where are backups stored, and are they off this server?**
+4. **Has anyone actually tested restoring from those backups?**
+5. **What paid product does this replace, and what does it cost?**
+6. **Is the money saved worth the time this will take to maintain?**
+
+If no one owns those answers, use hosted tools. Self-hosting is not automatically more faithful, cheaper, or safer.
+
+---
+
 ## What's Included
 
 | Function | Tool | Why |
 |----------|------|-----|
 | **Website** | WordPress | Familiar, plugin ecosystem, easy themes |
 | **ChMS** | ChurchCRM | Member tracking, groups, basic check-in |
-| **Database** | Adminer | Easy database management without command line |
+| **Database** | Adminer | Easy database management — opt-in only |
 | **Proxy/SSL** | Traefik | Automatic HTTPS, simple routing |
+
+## Update Policy
+
+This stack pins images to stable version tags. Pinning gives you a predictable, tested version instead of an unknown update landing silently.
+
+**How to stay updated:** Run [Diun](https://github.com/crazy-max/diun) (recommended in the root guide) to receive email notifications when a new image tag is published. When you get a notification, take a backup first, then run `docker compose pull && docker compose up -d` during a quiet weekday window.
 
 ## System Requirements
 
@@ -52,27 +75,18 @@ cp .env.example .env
 
 ### 3. Configure Environment
 
-Edit `.env`:
-
 ```bash
-# Your domain names (must point to server IP)
-WORDPRESS_DOMAIN=www.yourchurch.com
-CHURCHCRM_DOMAIN=crm.yourchurch.com
-ADMINER_DOMAIN=db.yourchurch.com
-
-# Let's Encrypt email (for SSL certificates)
-ACME_EMAIL=you@yourchurch.com
-
-# Database passwords - CHANGE THESE!
-WORDPRESS_DB_PASSWORD=your_secure_password_1
-CHURCHCRM_DB_PASSWORD=your_secure_password_2
-MYSQL_ROOT_PASSWORD=your_secure_root_password
-MYSQL_ROOT_PASSWORD_2=your_secure_root_password_2
-
-# Adminer login (user: admin, password: changeme)
-# Generate with: htpasswd -nb admin yourpassword | sed -e s/\$/\$\$/g
-ADMINER_AUTH=admin:$$apr1$$H6uskkkW$$IgXLP6ewTrSuBkTrqE8wj/
+nano .env
 ```
+
+Fill in all values. Leave nothing blank — the stack will refuse to start until every required variable has a real value.
+
+To generate strong passwords:
+```bash
+openssl rand -base64 24
+```
+
+Run it once per password field.
 
 ### 4. Start the Stack
 
@@ -86,7 +100,7 @@ docker-compose up -d
 1. Visit `https://www.yourchurch.com`
 2. Complete WordPress setup wizard
 3. Install a church theme (recommend: "Church" or "Faith")
-4. Essential plugins: 
+4. Essential plugins:
    - "Sermon Manager" for sermons
    - "The Events Calendar" for events
    - "WP Mail SMTP" for email
@@ -95,8 +109,26 @@ docker-compose up -d
 1. Visit `https://crm.yourchurch.com`
 2. Create admin account
 3. Complete initial setup wizard
-4. Configure email settings (use WP Mail SMTP credentials)
+4. Configure email settings
 5. Import members or add manually
+
+## Adminer — Opt-In Database Panel
+
+Adminer lets you browse and edit database contents through a web interface. A database panel left running permanently is an attractive target — it exposes direct read/write access to every table behind only basic auth. Start it only when you need it, then stop it when you are done.
+
+```bash
+# Start Adminer (when you need it)
+docker compose --profile adminer up -d adminer
+
+# Stop Adminer (immediately after you're done)
+docker compose stop adminer
+```
+
+Before enabling Adminer, replace the default `ADMINER_AUTH` value in your `.env` with a fresh hash:
+
+```bash
+htpasswd -nb admin yourpassword | sed -e 's/\$/\$\$/g'
+```
 
 ## Maintenance
 
@@ -106,6 +138,7 @@ Create `backup.sh`:
 
 ```bash
 #!/bin/bash
+set -euo pipefail
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="$HOME/backups"
 mkdir -p $BACKUP_DIR
@@ -129,18 +162,61 @@ echo "Backup completed: $DATE"
 
 Add to crontab:
 ```bash
-0 2 * * * /home/youruser/church-plant/backup.sh >> /var/log/church-backup.log 2>&1
+chmod +x backup.sh
+(crontab -l 2>/dev/null; echo "0 2 * * * $HOME/church-plant/backup.sh >> /var/log/church-backup.log 2>&1") | crontab -
 ```
+
+Copy backups off this server — Backblaze B2 is $5/month for plenty of space.
 
 ### Updates
 
+See **Update Policy** above. Short version: backup, then pull.
+
 ```bash
-# Update containers
 docker-compose pull
 docker-compose up -d
+```
 
-# Update WordPress plugins (via admin panel)
-# Update ChurchCRM (via built-in updater)
+## Restore (test this BEFORE you need it)
+
+A backup you have never restored is a hope, not a plan. Practice this on a spare server or fresh directory.
+
+### Restore WordPress
+
+```bash
+# 1. Stop the stack
+docker-compose down
+
+# 2. Restore WordPress file volume
+docker run --rm \
+  -v church-plant_wordpress-data:/data \
+  -v $HOME/backups:/backup \
+  alpine sh -c "rm -rf /data/* && tar xzf /backup/wordpress_YYYYMMDD_HHMMSS.tar.gz -C /data"
+
+# 3. Start just the database, restore the SQL dump
+docker-compose up -d wordpress-db
+sleep 15
+docker exec -i church-plant-wordpress-db mysql -u root -p${MYSQL_ROOT_PASSWORD} wordpress \
+  < $HOME/backups/wordpress_db_YYYYMMDD_HHMMSS.sql
+
+# 4. Start everything
+docker-compose up -d
+
+# 5. Verify: open https://www.yourchurch.com and log in
+```
+
+### Restore ChurchCRM
+
+```bash
+docker run --rm \
+  -v church-plant_churchcrm-data:/data \
+  -v $HOME/backups:/backup \
+  alpine sh -c "rm -rf /data/* && tar xzf /backup/churchcrm_YYYYMMDD_HHMMSS.tar.gz -C /data"
+
+docker exec -i church-plant-churchcrm-db mysql -u root -p${MYSQL_ROOT_PASSWORD_2} churchcrm \
+  < $HOME/backups/churchcrm_db_YYYYMMDD_HHMMSS.sql
+
+# Verify: open https://crm.yourchurch.com and confirm member data is present
 ```
 
 ## Troubleshooting
@@ -181,9 +257,9 @@ docker-compose logs churchcrm-db
 
 ## Security Notes
 
-1. **Change default passwords immediately**
+1. **Passwords are required** — the stack will not start until all variables are set
 2. **Enable WordPress security plugin** (Wordfence or similar)
-3. **Keep backups offsite** (rsync to another server or S3)
+3. **Keep backups offsite** (rsync to another server or Backblaze B2)
 4. **Configure firewall:**
    ```bash
    sudo ufw allow 22/tcp
@@ -196,6 +272,7 @@ docker-compose logs churchcrm-db
    sudo apt install unattended-upgrades
    sudo dpkg-reconfigure unattended-upgrades
    ```
+6. **No reverse proxy on this stack** means HSTS and security headers are managed by Traefik. If you ever remove Traefik, see the production guidance in the root guide for manual header configuration.
 
 ## Migration Path
 
@@ -212,7 +289,3 @@ When ready to upgrade to Small Church Stack:
 - WordPress docs: https://wordpress.org/support/
 - ChurchCRM docs: https://github.com/ChurchCRM/CRM/wiki
 - Traefik docs: https://doc.traefik.io/traefik/
-
----
-
-*Stack Version: 1.0 | Last Updated: 2026-02-03*

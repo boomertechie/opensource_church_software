@@ -1,0 +1,17 @@
+# Repos to exclude from the rolling health-check report entirely.
+# One `owner/repo` per line. Comments start with #.
+#
+# Use this for repos that should produce NO output in the health report at all.
+# For repos that are abandoned but should appear in the report body for
+# historical transparency, use `.github/listed-repos-tiers.txt` instead
+# (tier: archaeology or historical).
+#
+# Remove an entry if upstream comes back to life and we want to re-evaluate.
+
+# Archived in late 2025; successor (nicholas-fedor/watchtower) is already
+# listed. Mentioned only in a transitional note — no value in reporting.
+containrrr/watchtower
+
+# Stale but still listed as a valid option; intentionally excluded from
+# automated flags while the maintainer evaluates its status.
+coders4help/volunteer_planner

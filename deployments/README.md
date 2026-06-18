@@ -2,6 +2,23 @@
 
 Ready-to-deploy Docker Compose stacks for self-hosting church software.
 
+---
+
+## Before You Deploy — Six Questions
+
+Answer these before choosing a stack or running a single command.
+
+1. **Who will patch this stack monthly?**
+2. **Who gets alerted when something breaks at 2 AM?**
+3. **Where are backups stored, and are they off this server?**
+4. **Has anyone actually tested restoring from those backups?**
+5. **What paid product does this replace, and what does it cost?**
+6. **Is the money saved worth the time this will take to maintain?**
+
+If no one owns those answers, use hosted tools. Self-hosting is not automatically more faithful, cheaper, or safer.
+
+---
+
 ## Choose Your Stack
 
 | Stack | Best For | RAM | What's Included |
@@ -18,7 +35,8 @@ Ready-to-deploy Docker Compose stacks for self-hosting church software.
 ```bash
 cd deployments/starter
 cp .env.example .env
-# Edit .env with your domains and passwords
+# Edit .env — fill in all fields, leave nothing blank
+nano .env
 docker compose up -d
 ```
 
@@ -41,7 +59,3 @@ docker compose up -d
 | Document Editing (OnlyOffice) | ❌ | ❌ | ❌ | ✅ |
 | Monitoring (Uptime Kuma) | ❌ | ❌ | ✅ | ✅ |
 | Encrypted Backups (Duplicati) | ❌ | ❌ | ❌ | ✅ |
-
-## Legacy Stack
-
-The [docker-compose/](docker-compose/) directory contains a basic nginx-based deployment. The newer tiered stacks above use Traefik for simpler SSL management and are recommended for new deployments.

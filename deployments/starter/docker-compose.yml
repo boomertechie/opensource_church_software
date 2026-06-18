@@ -1,7 +1,13 @@
 services:
   # Traefik - handles HTTPS automatically
+  # NOTE: Traefik mounts /var/run/docker.sock, which lets it read container labels and
+  # route traffic automatically. This is standard practice but it means Traefik has
+  # elevated access to the Docker host. Keep the image updated and treat Traefik as
+  # high-trust infrastructure. If you want to reduce that exposure, look into
+  # docker-socket-proxy (a read-only intermediary) — but that is an optional hardening
+  # step, not required for most churches.
   traefik:
-    image: traefik:v2.10
+    image: traefik:v3.1
     container_name: starter-traefik
     command:
       - "--providers.docker=true"
@@ -9,7 +15,7 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?set ACME_EMAIL in .env}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
     ports:
@@ -24,20 +30,26 @@ services:
 
   # WordPress - Your church website
   wordpress:
-    image: wordpress:6.4
+    image: wordpress:6.7
     container_name: starter-wordpress
     environment:
       WORDPRESS_DB_HOST: wordpress-db
       WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:?set WORDPRESS_DB_PASSWORD in .env}
       WORDPRESS_DB_NAME: wordpress
     volumes:
       - wordpress-data:/var/www/html
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.wordpress.rule=Host(`${WORDPRESS_DOMAIN}`)"
+      - "traefik.http.routers.wordpress.rule=Host(`${WORDPRESS_DOMAIN:?set WORDPRESS_DOMAIN in .env}`)"
       - "traefik.http.routers.wordpress.entrypoints=websecure"
       - "traefik.http.routers.wordpress.tls.certresolver=letsencrypt"
+      # Security headers
+      - "traefik.http.middlewares.wordpress-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.wordpress-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.wordpress-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.wordpress-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.wordpress.middlewares=wordpress-headers"
     networks:
       - church
     depends_on:
@@ -48,10 +60,10 @@ services:
     image: mysql:8.0
     container_name: starter-wordpress-db
     environment:
-      MYSQL_ROOT_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${WORDPRESS_DB_PASSWORD:?set WORDPRESS_DB_PASSWORD in .env}
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wordpress
-      MYSQL_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      MYSQL_PASSWORD: ${WORDPRESS_DB_PASSWORD:?set WORDPRESS_DB_PASSWORD in .env}
     volumes:
       - wordpress-db-data:/var/lib/mysql
     networks:
@@ -59,21 +71,30 @@ services:
     restart: unless-stopped
 
   # ChurchCRM - Member management
+  # ChurchCRM does not publish versioned image tags; pinned by digest to the last
+  # verified stable build. Run `docker manifest inspect churchcrm/crm:latest` after
+  # a ChurchCRM release announcement to get the new digest, then update this file.
   churchcrm:
-    image: churchcrm/crm:latest
+    image: churchcrm/crm:latest@sha256:97057d29145ee60ae3c1070315bfc69e1c9955b63841491c6c7650574daff9bc
     container_name: starter-churchcrm
     environment:
       CRM_DB_HOST: churchcrm-db
       CRM_DB_NAME: churchcrm
       CRM_DB_USER: churchcrm
-      CRM_DB_PASS: ${CHURCHCRM_DB_PASSWORD}
+      CRM_DB_PASS: ${CHURCHCRM_DB_PASSWORD:?set CHURCHCRM_DB_PASSWORD in .env}
     volumes:
       - churchcrm-data:/var/www/churchcrm
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.churchcrm.rule=Host(`${CHURCHCRM_DOMAIN}`)"
+      - "traefik.http.routers.churchcrm.rule=Host(`${CHURCHCRM_DOMAIN:?set CHURCHCRM_DOMAIN in .env}`)"
       - "traefik.http.routers.churchcrm.entrypoints=websecure"
       - "traefik.http.routers.churchcrm.tls.certresolver=letsencrypt"
+      # Security headers
+      - "traefik.http.middlewares.churchcrm-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.churchcrm-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.churchcrm-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.churchcrm-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.churchcrm.middlewares=churchcrm-headers"
     networks:
       - church
     depends_on:
@@ -81,13 +102,13 @@ services:
     restart: unless-stopped
 
   churchcrm-db:
-    image: mariadb:10.6
+    image: mariadb:10.11
     container_name: starter-churchcrm-db
     environment:
-      MYSQL_ROOT_PASSWORD: ${CHURCHCRM_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${CHURCHCRM_DB_PASSWORD:?set CHURCHCRM_DB_PASSWORD in .env}
       MYSQL_DATABASE: churchcrm
       MYSQL_USER: churchcrm
-      MYSQL_PASSWORD: ${CHURCHCRM_DB_PASSWORD}
+      MYSQL_PASSWORD: ${CHURCHCRM_DB_PASSWORD:?set CHURCHCRM_DB_PASSWORD in .env}
     volumes:
       - churchcrm-db-data:/var/lib/mysql
     networks:
@@ -96,26 +117,31 @@ services:
 
   # Listmonk - Email newsletters
   listmonk:
-    image: listmonk/listmonk:latest
+    image: listmonk/listmonk:v4.1.0
     container_name: starter-listmonk
     environment:
       LISTMONK_app__address: "0.0.0.0:9000"
-      LISTMONK_app__admin_username: ${LISTMONK_USER}
-      LISTMONK_app__admin_password: ${LISTMONK_PASSWORD}
+      LISTMONK_app__admin_username: ${LISTMONK_USER:?set LISTMONK_USER in .env}
+      LISTMONK_app__admin_password: ${LISTMONK_PASSWORD:?set LISTMONK_PASSWORD in .env}
       LISTMONK_db__host: listmonk-db
       LISTMONK_db__port: "5432"
       LISTMONK_db__user: listmonk
-      LISTMONK_db__password: ${LISTMONK_DB_PASSWORD}
+      LISTMONK_db__password: ${LISTMONK_DB_PASSWORD:?set LISTMONK_DB_PASSWORD in .env}
       LISTMONK_db__database: listmonk
       LISTMONK_db__ssl_mode: disable
     volumes:
       - listmonk-data:/listmonk/uploads
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.listmonk.rule=Host(`${LISTMONK_DOMAIN}`)"
+      - "traefik.http.routers.listmonk.rule=Host(`${LISTMONK_DOMAIN:?set LISTMONK_DOMAIN in .env}`)"
       - "traefik.http.routers.listmonk.entrypoints=websecure"
       - "traefik.http.routers.listmonk.tls.certresolver=letsencrypt"
       - "traefik.http.services.listmonk.loadbalancer.server.port=9000"
+      # Security headers
+      - "traefik.http.middlewares.listmonk-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.listmonk-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.listmonk-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.listmonk.middlewares=listmonk-headers"
     networks:
       - church
     depends_on:
@@ -127,7 +153,7 @@ services:
     image: postgres:15-alpine
     container_name: starter-listmonk-db
     environment:
-      POSTGRES_PASSWORD: ${LISTMONK_DB_PASSWORD}
+      POSTGRES_PASSWORD: ${LISTMONK_DB_PASSWORD:?set LISTMONK_DB_PASSWORD in .env}
       POSTGRES_USER: listmonk
       POSTGRES_DB: listmonk
     volumes:
@@ -138,19 +164,25 @@ services:
 
   # Vaultwarden - Password manager for staff
   vaultwarden:
-    image: vaultwarden/server:latest
+    image: vaultwarden/server:1.33.2
     container_name: starter-vaultwarden
     environment:
       SIGNUPS_ALLOWED: "false"
-      ADMIN_TOKEN: ${VAULTWARDEN_ADMIN_TOKEN}
-      DOMAIN: https://${VAULTWARDEN_DOMAIN}
+      ADMIN_TOKEN: ${VAULTWARDEN_ADMIN_TOKEN:?set VAULTWARDEN_ADMIN_TOKEN in .env}
+      DOMAIN: https://${VAULTWARDEN_DOMAIN:?set VAULTWARDEN_DOMAIN in .env}
     volumes:
       - vaultwarden-data:/data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.vaultwarden.rule=Host(`${VAULTWARDEN_DOMAIN}`)"
+      - "traefik.http.routers.vaultwarden.rule=Host(`${VAULTWARDEN_DOMAIN:?set VAULTWARDEN_DOMAIN in .env}`)"
       - "traefik.http.routers.vaultwarden.entrypoints=websecure"
       - "traefik.http.routers.vaultwarden.tls.certresolver=letsencrypt"
+      # Security headers
+      - "traefik.http.middlewares.vaultwarden-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.vaultwarden-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.vaultwarden-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.vaultwarden-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.routers.vaultwarden.middlewares=vaultwarden-headers"
     networks:
       - church
     restart: unless-stopped

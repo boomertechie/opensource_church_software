@@ -2,6 +2,23 @@
 
 > Balanced setup for established churches with 50-200 members.
 
+---
+
+## Before You Deploy — Six Questions
+
+Answer these before running a single command. If no one owns the answers, use a hosted service instead (see the category guides' "If self-hosting is too much" sections).
+
+1. **Who will patch this stack monthly?**
+2. **Who gets alerted when something breaks at 2 AM?**
+3. **Where are backups stored, and are they off this server?**
+4. **Has anyone actually tested restoring from those backups?**
+5. **What paid product does this replace, and what does it cost?**
+6. **Is the money saved worth the time this will take to maintain?**
+
+If no one owns those answers, use hosted tools. Self-hosting is not automatically more faithful, cheaper, or safer.
+
+---
+
 ## What's Included
 
 | Function | Tool | Purpose |
@@ -11,7 +28,11 @@
 | **Files** | Nextcloud | Document storage, collaboration, calendars |
 | **Email** | Listmonk | Newsletters, announcements, automated emails |
 | **Monitoring** | Uptime Kuma | Service health monitoring |
-| **Updates** | Watchtower | Automatic container updates |
+| **Updates** | Diun | Notifies you of available container image updates (manual apply) |
+
+## Update Policy
+
+This stack pins images to stable version tags. Diun (already included) emails you when a new image tag is available. When you receive a notification, schedule a maintenance window, take a backup, then run `docker compose pull && docker compose up -d`. Never update on Saturday night or Sunday morning.
 
 ## System Requirements
 
@@ -32,10 +53,6 @@ sudo apt update && sudo apt upgrade -y
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER
 newgrp docker
-
-# Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
 
 # Create directory
 mkdir -p ~/small-church && cd ~/small-church
@@ -61,68 +78,34 @@ curl -o docker-compose.yml https://raw.githubusercontent.com/boomertechie/openso
 curl -o .env.example https://raw.githubusercontent.com/boomertechie/opensource_church_software/main/deployments/small-church/.env.example
 cp .env.example .env
 
-# Edit configuration
+# Edit configuration — fill in all fields, leave nothing blank
 nano .env
+```
+
+Generate passwords with:
+```bash
+openssl rand -base64 24
 ```
 
 ### 4. Start the Stack
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 Wait 2-3 minutes for all services to initialize.
 
 ### 5. Complete Setup
 
-**WordPress:**
-- Visit `https://www.yourchurch.com`
-- Complete setup wizard
-- Install recommended plugins:
-  - Sermon Manager
-  - The Events Calendar
-  - WP Mail SMTP
-  - Wordfence Security
+**WordPress:** Visit `https://www.yourchurch.com`, complete setup wizard, install Sermon Manager, The Events Calendar, WP Mail SMTP, and Wordfence Security.
 
-**ChurchCRM:**
-- Visit `https://crm.yourchurch.com`
-- Create admin account
-- Configure email settings
-- Set up groups and Sunday School classes
-- Configure check-in for children's ministry
+**ChurchCRM:** Visit `https://crm.yourchurch.com`, create admin account, configure email settings, set up groups and check-in.
 
-**Nextcloud:**
-- Visit `https://files.yourchurch.com`
-- Admin account already created from environment variables
-- Install recommended apps:
-  - Calendar (share church calendars)
-  - Contacts (shared address book)
-  - Deck (project management)
-  - Forms (surveys, sign-ups)
-  - Polls (schedule voting)
-- Configure external storage if needed
+**Nextcloud:** Visit `https://files.yourchurch.com`, install Calendar, Contacts, Deck, and Forms apps.
 
-**Listmonk:**
-- Visit `https://news.yourchurch.com`
-- Login with credentials from .env
-- Configure SMTP settings (Settings → Settings → SMTP)
-- Create subscriber lists:
-  - All Church
-  - Staff
-  - Volunteers
-  - Parents
-- Import subscribers or add signup form to website
-- Create templates for newsletters
+**Listmonk:** Visit `https://news.yourchurch.com`, configure SMTP, create subscriber lists.
 
-**Uptime Kuma:**
-- Visit `https://status.yourchurch.com`
-- Create admin account
-- Add monitors for:
-  - https://www.yourchurch.com
-  - https://crm.yourchurch.com
-  - https://files.yourchurch.com
-  - https://news.yourchurch.com
-- Configure notifications (email, Discord, etc.)
+**Uptime Kuma:** Visit `https://status.yourchurch.com`, create admin account, add monitors for each subdomain, configure notifications.
 
 ## Maintenance
 
@@ -132,7 +115,7 @@ Create `backup.sh`:
 
 ```bash
 #!/bin/bash
-set -e
+set -euo pipefail
 
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="$HOME/backups"
@@ -153,7 +136,7 @@ docker exec small-church-churchcrm-db mysqldump -u root -p${MYSQL_ROOT_PASSWORD_
   $BACKUP_DIR/churchcrm_db_$DATE.sql
 
 # Nextcloud
-docker run --rm -v small-church_nextcloud-data:/data -v $BACKUP_DIR:/backup alpine \
+docker run --rm -v small-church_nextcloud-data-files:/data -v $BACKUP_DIR:/backup alpine \
   tar czf /backup/nextcloud_$DATE.tar.gz -C /data .
 docker exec small-church-nextcloud-db mysqldump -u root -p${MYSQL_ROOT_PASSWORD_3} nextcloud > \
   $BACKUP_DIR/nextcloud_db_$DATE.sql
@@ -174,81 +157,126 @@ echo "Backup completed: $(date)"
 Make executable and schedule:
 ```bash
 chmod +x backup.sh
-# Add to crontab - runs daily at 2 AM
-(crontab -l 2>/dev/null; echo "0 2 * * * /home/youruser/small-church/backup.sh >> /var/log/church-backup.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "0 2 * * * $HOME/small-church/backup.sh >> /var/log/church-backup.log 2>&1") | crontab -
 ```
 
-### Restore from Backup
+Copy backups off this server — Backblaze B2 is $5/month for plenty of space.
+
+## Restore (test this BEFORE you need it)
+
+A backup you have never restored is a hope, not a plan. Practice this on a spare server or fresh directory before disaster strikes.
+
+### Restore WordPress
 
 ```bash
-# Restore WordPress files
-docker run --rm -v small-church_wordpress-data:/data -v $BACKUP_DIR:/backup alpine \
-  sh -c "cd /data && tar xzf /backup/wordpress_YYYYMMDD_HHMMSS.tar.gz"
+cd ~/small-church
 
-# Restore WordPress database
-docker exec -i small-church-wordpress-db mysql -u root -p${MYSQL_ROOT_PASSWORD} wordpress < \
-  wordpress_db_YYYYMMDD_HHMMSS.sql
+# 1. Stop the stack
+docker compose down
+
+# 2. Restore file volume
+docker run --rm \
+  -v small-church_wordpress-data:/data \
+  -v $HOME/backups:/backup \
+  alpine sh -c "rm -rf /data/* && tar xzf /backup/wordpress_YYYYMMDD_HHMMSS.tar.gz -C /data"
+
+# 3. Start database, restore SQL dump
+docker compose up -d wordpress-db
+sleep 15
+docker exec -i small-church-wordpress-db mysql -u root -p${MYSQL_ROOT_PASSWORD} wordpress \
+  < $HOME/backups/wordpress_db_YYYYMMDD_HHMMSS.sql
+
+# 4. Start everything
+docker compose up -d
+
+# 5. Verify: open https://www.yourchurch.com and log in
+```
+
+### Restore ChurchCRM
+
+```bash
+docker run --rm \
+  -v small-church_churchcrm-data:/data \
+  -v $HOME/backups:/backup \
+  alpine sh -c "rm -rf /data/* && tar xzf /backup/churchcrm_YYYYMMDD_HHMMSS.tar.gz -C /data"
+
+docker exec -i small-church-churchcrm-db mysql -u root -p${MYSQL_ROOT_PASSWORD_2} churchcrm \
+  < $HOME/backups/churchcrm_db_YYYYMMDD_HHMMSS.sql
+
+# Verify: open https://crm.yourchurch.com and confirm member records are present
+```
+
+### Restore Nextcloud
+
+```bash
+# Put Nextcloud in maintenance mode before restore
+docker exec small-church-nextcloud php occ maintenance:mode --on
+
+# Restore files
+docker run --rm \
+  -v small-church_nextcloud-data-files:/data \
+  -v $HOME/backups:/backup \
+  alpine sh -c "rm -rf /data/* && tar xzf /backup/nextcloud_YYYYMMDD_HHMMSS.tar.gz -C /data"
+
+# Restore database
+docker exec -i small-church-nextcloud-db mysql -u root -p${MYSQL_ROOT_PASSWORD_3} nextcloud \
+  < $HOME/backups/nextcloud_db_YYYYMMDD_HHMMSS.sql
+
+# Turn off maintenance mode
+docker exec small-church-nextcloud php occ maintenance:mode --off
+
+# Verify: open https://files.yourchurch.com and confirm files exist
+```
+
+### Restore Listmonk
+
+```bash
+docker run --rm \
+  -v small-church_listmonk-data:/data \
+  -v $HOME/backups:/backup \
+  alpine sh -c "rm -rf /data/* && tar xzf /backup/listmonk_YYYYMMDD_HHMMSS.tar.gz -C /data"
+
+docker exec -i small-church-listmonk-db psql -U listmonk listmonk \
+  < $HOME/backups/listmonk_db_YYYYMMDD_HHMMSS.sql
+
+# Verify: open https://news.yourchurch.com and confirm subscriber lists exist
 ```
 
 ### Updates
 
-> **WARNING: Watchtower Risks**
->
-> Watchtower automatically updates containers, which can break things without warning. Mitigations:
-> 1. **Monitor notifications** — Watchtower emails you when updates occur
-> 2. **Test backups monthly** — Ensure you can restore if an update breaks something
-> 3. **Consider pinning critical images** — Change `image: wordpress:latest` to `image: wordpress:6.4` for stability
-> 4. **No rollback built-in** — If an update breaks things, you must restore from backup or manually pull old image
->
-> For production stability, consider disabling Watchtower and doing manual updates during maintenance windows.
+This stack uses **Diun** for image-update notifications. Diun does not update containers automatically — it emails you when a watched image has a new tag, and you apply the update manually during a maintenance window.
 
-Watchtower handles automatic container updates. For application updates:
+**To apply updates after a Diun notification:**
 
-**WordPress:** Use admin panel → Updates
-**ChurchCRM:** Built-in updater
-**Nextcloud:** Admin panel → Overview → Update
-**Listmonk:** Update container image version in docker-compose.yml
+```bash
+cd ~/small-church
+docker compose pull
+docker compose up -d
+```
+
+Run this during a quiet weekday window — never on Saturday night or Sunday morning. Test the affected service immediately after.
+
+**Application-level updates (separate from container updates):**
+
+- **WordPress:** Admin panel → Updates
+- **ChurchCRM:** Built-in updater
+- **Nextcloud:** Admin panel → Overview → Update
+- **Listmonk:** Bump the image tag in `docker-compose.yml` and re-run `docker compose up -d`
 
 ### Monitoring
 
 Check Uptime Kuma dashboard regularly. Common issues:
 
 - **High CPU/Memory:** Check `docker stats`
-- **Slow Nextcloud:** Redis helps; consider enabling PHP OPcache
+- **Slow Nextcloud:** Redis is already configured; consider enabling PHP OPcache
 - **Database errors:** Check individual service logs
-
-## Integration Guide
-
-### ChurchCRM ↔ WordPress
-
-1. Export members from ChurchCRM
-2. Use WP All Import plugin to create WordPress users
-3. Sync giving data manually or via custom script
-
-### Nextcloud ↔ ChurchCRM
-
-1. Export contacts from ChurchCRM
-2. Import to Nextcloud Contacts app
-3. Share church calendars publicly or with specific groups
-
-### Listmonk ↔ WordPress
-
-1. Add subscription form to WordPress footer/sidebar
-2. Use Listmonk subscription API
-3. Example integration plugin available
-
-### Listmonk ↔ ChurchCRM
-
-1. Export email list from ChurchCRM
-2. Import to Listmonk
-3. Set up regular sync via CSV export/import
 
 ## Troubleshooting
 
 ### Services won't start
 ```bash
 # Check logs
-docker-compose logs [service-name]
+docker compose logs [service-name]
 
 # Check disk space
 df -h
@@ -260,18 +288,18 @@ free -h
 ### SSL certificate issues
 ```bash
 # Force renewal
-docker-compose down
+docker compose down
 rm -f letsencrypt/acme.json
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Database connection errors
 ```bash
 # Verify databases are healthy
-docker-compose ps
+docker compose ps
 
 # Check specific database logs
-docker-compose logs [db-name]
+docker compose logs [db-name]
 ```
 
 ### Nextcloud performance issues
@@ -287,7 +315,7 @@ docker exec -it small-church-nextcloud \
 
 ## Security Best Practices
 
-1. **Keep .env secure:** Never commit to git
+1. **All passwords are required** — the stack will not start with blank values
 2. **Regular backups:** Daily automated, test restore monthly
 3. **Firewall:**
    ```bash
@@ -297,30 +325,8 @@ docker exec -it small-church-nextcloud \
    sudo ufw enable
    ```
 4. **Fail2ban:** Install and configure for SSH protection
-5. **Updates:** Enable automatic security updates
-6. **Monitoring:** Check Uptime Kuma regularly
-7. **Nextcloud security:** Enable 2FA for all admin accounts
-
-## Scaling Considerations
-
-When approaching 200+ members:
-
-1. **Upgrade VPS:** 4GB RAM → 8GB RAM
-2. **Separate databases:** Consider dedicated database server
-3. **CDN:** Add Cloudflare for WordPress/Nextcloud
-4. **Object storage:** Move Nextcloud files to S3-compatible storage
-5. **Monitoring:** Add more detailed logging and alerting
-
-## Migration from Church Plant Stack
-
-1. Set up Small Church Stack on new server
-2. Export WordPress content (Tools → Export)
-3. Export ChurchCRM database
-4. Import to new stack
-5. Set up additional services
-6. Test thoroughly
-7. Update DNS
-8. Decommission old server
+5. **Updates:** Apply after a Diun notification during a maintenance window
+6. **Nextcloud security:** Enable 2FA for all admin accounts
 
 ## Support Resources
 
@@ -329,7 +335,3 @@ When approaching 200+ members:
 - Nextcloud: https://docs.nextcloud.com/
 - Listmonk: https://listmonk.app/docs/
 - Uptime Kuma: https://github.com/louislam/uptime-kuma
-
----
-
-*Stack Version: 1.0 | Last Updated: 2026-02-03*

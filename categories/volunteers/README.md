@@ -19,55 +19,78 @@ There are two main approaches:
 1. **Dedicated Volunteer Schedulers** — Purpose-built for recurring ministry schedules
 2. **General Scheduling Tools** — Adapted for church use (Doodle-style polling)
 
+For a long time this category had no healthy dedicated option — the purpose-built projects below are abandoned or stale, leaving "adopt a full ChMS" or "use a spreadsheet" as the honest advice. As of mid-2026 the category has a maintained standalone entry: VoloRota.
+
+---
+
+## VoloRota
+
+**Status:** ✅ New — first release June 2026, actively developed
+
+**Skill Level:** Beginner (Docker)
+
+**True Cost:**
+- Software: Free (AGPL-3.0)
+- Hosting: $5-7/mo VPS (1GB RAM is plenty — runs in ~18MB)
+- Setup Time: ~10-30 minutes (timed walkthrough: clone to published schedule)
+- Ongoing Maintenance: Minimal (single container, SQLite, no external services beyond an SMTP relay)
+
+**What It Does:**
+Standalone volunteer/serving scheduler — the Planning Center Services scheduling niche, self-hosted. Define teams and roles, generate recurring services from templates, and auto-fill a fair rotation. Volunteers accept, decline, or arrange their own replacement from emailed magic links — no volunteer accounts or passwords.
+
+**Why Churches Use It:**
+- Every volunteer action happens from an emailed link on a phone — this addresses the most common complaint about commercial schedulers, forced volunteer accounts
+- Fair, explainable auto-fill: least-recently-served rotation honoring blockout dates, per-member role qualifications (your keys player is never scheduled on vocals), and no cross-team double-booking
+- Both scheduling models real churches use: individual rotation (nursery, sound) AND whole-crew rotation ("Worship Crew B has the 2nd Sunday")
+- Matrix view: services × role slots at a glance — the feature people miss most when leaving Planning Center
+- Decline-with-replacement: a declining volunteer picks their own cover from eligible teammates; the leader gets notified
+- ICS calendar feeds per volunteer, CSV export, printable schedules, per-service notes
+- No telemetry and no third-party requests on any page, enforced by the project's own test suite
+
+**Installation:**
+```bash
+docker run -d --name volorota \
+  -p 3000:3000 -v volorota_data:/data \
+  -e VOLOROTA_ADMIN_PASSWORD='pick-a-strong-password' \
+  volorota   # build from source — see the repo README
+```
+Docker Compose and a full deployment guide (including a Caddy/TLS demo stack) are in the repo.
+
+**Live Demo:** https://demo.volorota.org (resets hourly; admin password and volunteer links published at https://volorota.org)
+
+**Caveats:**
+- Young project (June 2026) — small community, no third-party plugin ecosystem yet
+- Single admin account in v1 (volunteers don't need accounts; co-admins share a password)
+- Email notifications only — no SMS (per-volunteer ICS feeds are the calendar bridge)
+- Scheduling only, by design: no check-in, giving, or member database — pair it with your ChMS
+- Disclosure: VoloRota is built and maintained by contributors to this guide
+
+**Links:**
+- Website + demo: https://volorota.org
+- GitHub: https://github.com/VoloRota/volorota
+
 ---
 
 ## OpenVolunteerPlatform
 
-**Status:** ⚠️ Maintenance Mode (last commit: 2022)
+**Status:** ⛔ Not Recommended — Abandoned
 
-**Skill Level:** Advanced
+**Why we removed the recommendation:**
+- Last meaningful commit was **July 2020**; only Renovate bot dependency PRs since
+- Built as a one-off COVID-19 response project by Red Hat's now-defunct aerogear team
+- Core dependencies are themselves abandoned (Graphback, Offix), so "updating" the project is effectively a rewrite
+- Multiple unaddressed CVEs in transitive dependencies (express, mongodb, keycloak-connect, moment, etc.)
 
-**True Cost:**
-- Software: Free
-- Hosting: $10-30/mo VPS (requires 2GB+ RAM)
-- Setup Time: 8-12 hours
-- Ongoing Maintenance: 2-4 hours/month
+**If you're searching for this project:** Skip the fork-and-update path. The architecture (Graphback + Offix + MQTT + Keycloak) wasn't justified for most churches even when it was alive. For comparable functionality, see Volunteer Planner, ChurchApps, or your existing ChMS.
 
-**What It Does:**
-Full-featured volunteer management platform originally built for crisis response (COVID-19). Includes role-based scheduling, real-time tracking via GraphQL subscriptions, automated reporting, and offline-capable mobile apps.
-
-**Why Churches Use It:**
-- Hierarchical organization structure (nations → regions → areas → cities)
-- Complex shift scheduling with capacity limits
-- Mobile apps with offline support
-- Real-time updates when volunteers check in/out
-- Built-in reporting and statistics
-
-**Installation:**
-- **Docker:** Available but complex (requires Keycloak, PostgreSQL, MQTT broker)
-- **Self-hosted:** See [deployment guide](https://github.com/aerogear/OpenVolunteerPlatform/blob/master/docs)
-
-**Architecture:**
-- Backend: Node.js/GraphQL with Graphback
-- Frontend: React with Offix (offline support)
-- Auth: Keycloak (SSO)
-- Real-time: MQTT broker for subscriptions
-
-**Caveats:**
-- Last significant update was 2022 — appears to be in maintenance mode
-- Overkill for small churches (< 50 volunteers)
-- Requires DevOps knowledge to deploy and maintain
-- Mobile apps need custom build for your instance
-
-**Links:**
+**Original links (for archaeology only):**
 - GitHub: https://github.com/aerogear/OpenVolunteerPlatform
-- Docs: https://github.com/aerogear/OpenVolunteerPlatform/tree/master/docs
 
 ---
 
 ## Volunteer Planner (volunteer-planner.org)
 
-**Status:** ✅ Active (last commit: 2024)
+**Status:** ⚠️ Stale (last commit: May 2023, mostly Dependabot)
 
 **Skill Level:** Intermediate
 
@@ -128,7 +151,7 @@ pip install -r requirements/dev.txt
 
 ## Rallly
 
-**Status:** ✅ Very Active (last commit: 2025)
+**Status:** ✅ Very Active (verified 2026-04-30, commits same day)
 
 **Skill Level:** Beginner to Intermediate
 
@@ -154,12 +177,12 @@ Modern, Doodle-style scheduling tool for finding the best time for group meeting
 version: "3"
 services:
   rallly:
-    image: lukevella/rallly:latest
+    image: rallly/rallly:latest
     ports:
       - "3000:3000"
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/rallly
-      - SECRET_KEY=your-secret-key-here
+      - SECRET_KEY=${RALLLY_SECRET}
     depends_on:
       - db
   db:
@@ -181,20 +204,20 @@ volumes:
 - Committee scheduling
 
 **When NOT to Use Rallly:**
-- Recurring weekly volunteer rotations (use Volunteer Planner or ChMS instead)
+- Recurring weekly volunteer rotations (use Volorota or ChMS instead)
 - Complex shift management with capacity limits
 - Organizations with 100+ recurring positions
 
 **Links:**
-- GitHub: https://github.com/lukevella/rallly
-- Demo: https://rallly.co
+- Website: https://rallly.co
+- GitHub: https://rallly.co/github
 - Self-hosting docs: https://support.rallly.co/self-hosting
 
 ---
 
 ## ChurchApps (CHUMS/B1)
 
-**Status:** ✅ Very Active (last commit: 2025)
+**Status:** ✅ Very Active (verified 2026-04-30, commits same day)
 
 **Skill Level:** Beginner
 
@@ -241,30 +264,33 @@ Full church management system with integrated volunteer scheduling, check-in, gr
 
 ## Comparison Matrix
 
-| Feature | OpenVolunteerPlatform | Volunteer Planner | Rallly | ChurchApps |
-|---------|----------------------|-------------------|--------|------------|
-| **Recurring Schedules** | ✅ | ✅ | ❌ | ✅ |
-| **Self-Serve Swap** | ✅ | ✅ | N/A | ✅ |
-| **Mobile Apps** | ✅ (build required) | ❌ | ✅ (web) | ✅ (native) |
-| **Check-in Integration** | ✅ | ❌ | ❌ | ✅ |
-| **Skill Level** | Advanced | Intermediate | Beginner | Beginner |
-| **Setup Time** | 8-12 hrs | 2-4 hrs | 30 min | 15 min (cloud) |
-| **Maintenance** | High | Medium | Low | Low/Medium |
+| Feature | VoloRota | Volunteer Planner | Rallly | ChurchApps |
+|---------|----------|-------------------|--------|------------|
+| **Project Health** | ✅ New, active (2026) | ⚠️ Stale (2023) | ✅ Very active | ✅ Very active |
+| **Recurring Schedules** | ✅ (individual + crew rotation) | ✅ | ❌ | ✅ |
+| **Self-Serve Swap** | ✅ (decline → pick replacement, no account) | ✅ | N/A | ✅ |
+| **Volunteer Accounts Needed** | ❌ never (magic links) | ✅ | ❌ | ✅ |
+| **Mobile Apps** | ✅ (mobile-first web) | ❌ | ✅ (web) | ✅ (native) |
+| **Check-in Integration** | ❌ (by design) | ❌ | ❌ | ✅ |
+| **Skill Level** | Beginner (Docker) | Intermediate | Beginner | Beginner |
+| **Setup Time** | 10-30 min | 2-4 hrs | 30 min | 15 min (cloud) |
+| **Maintenance** | Low | Medium | Low | Low/Medium |
 
 ---
 
 ## Recommendation by Church Size
 
 ### Church Plant (< 50 people)
-**Use:** Google Sheets/Calendar or Rallly
-- Simple, free, no setup
-- For recurring schedules: shared Google Sheet with volunteer preferences
+**Use:** Google Sheets/Calendar, Rallly, or VoloRota
+- Simple, free, no setup: shared Google Sheet with volunteer preferences
 - For events: Rallly cloud (free) or self-hosted
+- Already self-hosting a website? VoloRota adds real scheduling for one more container
 
 ### Small Church (50-200)
-**Use:** Volunteer Planner or ChurchApps Cloud
-- Volunteer Planner: If you want self-hosted control
-- ChurchApps Cloud: If you want all-in-one simplicity
+**Use:** VoloRota or ChurchApps Cloud
+- VoloRota: self-hosted, volunteers need no accounts; pair it with your existing ChMS
+- ChurchApps Cloud: all-in-one simplicity (scheduling + check-in + giving in one platform)
+- Volunteer Planner remains an option if you need its multi-site shift model, but it is stale
 
 ### Mid-Size Church (200-1000)
 **Use:** ChurchApps (self-hosted or cloud)
@@ -273,9 +299,10 @@ Full church management system with integrated volunteer scheduling, check-in, gr
 - Service planning integration
 
 ### Large Church (1000+)
-**Use:** Evaluate OpenVolunteerPlatform (if maintained) or commercial solutions
-- May need custom development
-- Consider integration with existing ChMS
+**Use:** ChurchApps (self-hosted) or a commercial ChMS with a volunteer module (Planning Center Services, Rock RMS)
+- At this scale, integration with check-in, giving, and service planning matters more than scheduling alone
+- Custom development is a real option, but start with a maintained platform — not an abandoned one
+- Volunteer Planner can still work for single-purpose teams; pair it with your existing ChMS
 
 ---
 
@@ -330,6 +357,13 @@ Native volunteer module included — no integration needed.
 - Regular backups of volunteer contact information
 - Consider data retention policies (delete old records)
 
+
+## If self-hosting is too much
+
+- ChurchApps' hosted b1.church includes its volunteer module on the cloud free tier.
+- A narrow paid scheduler beats a spreadsheet that one person understands — and beats a server nobody patches.
+- Under ~50 people, the shared-sheet approach recommended above is genuinely fine.
+
 ---
 
-*Last Updated: 2026-02-03 | Maintained by: church-tech-stack maintainers*
+*Last Updated: 2026-04-30 | Maintained by: church-tech-stack maintainers*
