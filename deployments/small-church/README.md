@@ -57,8 +57,8 @@ status.yourchurch.com  → A Record → your-server-ip
 
 ```bash
 # Download files
-curl -o docker-compose.yml https://raw.githubusercontent.com/church-tech-stack/main/stacks/small-church/docker-compose.yml
-curl -o .env.example https://raw.githubusercontent.com/church-tech-stack/main/stacks/small-church/.env.example
+curl -o docker-compose.yml https://raw.githubusercontent.com/boomertechie/opensource_church_software/main/deployments/small-church/docker-compose.yml
+curl -o .env.example https://raw.githubusercontent.com/boomertechie/opensource_church_software/main/deployments/small-church/.env.example
 cp .env.example .env
 
 # Edit configuration
