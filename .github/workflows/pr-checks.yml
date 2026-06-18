@@ -60,6 +60,9 @@ jobs:
         working-directory: deployments/${{ matrix.stack }}
         run: |
           cp .env.example .env
+          # Fill any empty required vars with a placeholder so :? interpolation
+          # doesn't fail — this is CI validation only, not a real deployment.
+          sed -i 's/^\([A-Z_][A-Z_0-9]*\)=$/\1=ci-placeholder/' .env
           docker compose config -q
 
   # -------------------------------------------------------------------------
