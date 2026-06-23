@@ -13,8 +13,8 @@ This Docker Compose setup runs ChurchCRM and Nextcloud on a single VPS.
 
 1. **Clone this repository:**
    ```bash
-   git clone https://github.com/yourusername/church-tech-stack.git
-   cd church-tech-stack/deployments/privacy-first
+   git clone https://github.com/boomertechie/opensource_church_software.git
+   cd opensource_church_software/deployments/privacy-first
    ```
 
 2. **Create environment file:**

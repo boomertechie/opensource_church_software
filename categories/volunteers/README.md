@@ -210,7 +210,6 @@ volumes:
 
 **Links:**
 - Website: https://rallly.co
-- GitHub: https://rallly.co/github
 - Self-hosting docs: https://support.rallly.co/self-hosting
 
 ---

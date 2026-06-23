@@ -98,7 +98,6 @@ docker-compose up -d
 
 **Links:**
 - GitHub: https://github.com/knadh/listmonk
-- Demo: https://demo.listmonk.app (user: demo, pass: demo)
 - Docs: https://listmonk.app/docs
 
 ---
@@ -230,7 +229,6 @@ volumes:
 
 **Links:**
 - Website: https://rallly.co
-- GitHub: https://rallly.co/github
 - Self-hosting docs: https://support.rallly.co/self-hosting
 
 ---

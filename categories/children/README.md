@@ -149,7 +149,6 @@ ChurchCRM has `Checkin.php` for Sunday School classes:
 **Links:**
 - GitHub: https://github.com/ChurchCRM/CRM
 - Docs: https://github.com/ChurchCRM/CRM/wiki
-- Check-in code: https://github.com/ChurchCRM/CRM/blob/master/src/Checkin.php
 
 ---
 
@@ -188,7 +187,6 @@ Australian-developed church management system with attendance tracking, rosters,
 
 **Links:**
 - GitHub: https://github.com/tbar0970/jethro-pmm
-- Website: https://jethro-pmm.sourceforge.net/
 
 ---
 
