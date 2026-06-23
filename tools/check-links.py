@@ -15,7 +15,13 @@ EXCLUDE_PATTERNS = [
     r"127\.0\.0\.1",
     r"example\.com",
     r"your-domain\.com",
+    r"yourchurch\.com",   # template placeholder domains in deployment docs
+    r"yourusername",      # placeholder git clone URLs
+    r"\$\(",             # shell variable expansions captured by the URL regex
 ]
+
+# Sites that block automated checkers but are valid — treat as warnings, not failures.
+SOFT_FAIL_STATUSES = {403, 429, 401}
 
 def should_check(url):
     """Check if URL should be validated."""
@@ -68,8 +74,13 @@ def main():
             result = future.result()
             
             if not result["ok"]:
-                broken.append({**result, "file": file})
-                print(f"❌ {result['status']} | {url[:60]}...")
+                status = result["status"]
+                if isinstance(status, int) and status in SOFT_FAIL_STATUSES:
+                    redirects.append({**result, "file": file})
+                    print(f"⚠️  {status} (soft) | {url[:60]}...")
+                else:
+                    broken.append({**result, "file": file})
+                    print(f"❌ {status} | {url[:60]}...")
             elif result["redirect"]:
                 redirects.append({**result, "file": file})
                 print(f"↪️  Redirect | {url[:60]}...")

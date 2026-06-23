@@ -15,3 +15,7 @@ containrrr/watchtower
 # Stale but still listed as a valid option; intentionally excluded from
 # automated flags while the maintainer evaluates its status.
 coders4help/volunteer_planner
+
+# Listed only as the upstream-archived containrrr/watchtower successor; all
+# recent commits are bot dependency bumps — no human commit to flag as stale.
+nicholas-fedor/watchtower

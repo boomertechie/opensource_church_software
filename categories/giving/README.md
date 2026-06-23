@@ -72,7 +72,7 @@ Smaller community than ChurchCRM (newer project). Less third-party documentation
 
 - GitHub: https://github.com/ChurchApps/B1Admin
 - Website: https://b1.church
-- Documentation: https://churchapps.org/docs
+- Documentation: https://churchapps.org/dev
 - Mobile Apps: iOS App Store / Google Play (search "B1.Church")
 
 ---

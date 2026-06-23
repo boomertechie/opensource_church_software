@@ -196,7 +196,7 @@ A condensed list of free and open source tools by category. See category guides 
 ### Church Management Systems
 - [ChurchCRM](https://churchcrm.io/) - Member management, giving tracking, check-in
 - [ChurchApps](https://churchapps.org/) - Suite of church apps (ChMS, check-in, giving)
-- [Jethro PMM](https://jethro-pmm.sourceforge.net/) - Pastoral Ministry Manager
+- [Jethro PMM](https://github.com/tbar0970/jethro-pmm) - Pastoral Ministry Manager
 
 ### Email & Communications
 - [Listmonk](https://listmonk.app/) - High-performance newsletter platform
