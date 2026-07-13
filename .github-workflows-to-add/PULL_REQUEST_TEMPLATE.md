@@ -11,7 +11,7 @@
 
 ## Checklist
 - [ ] I ran `python tools/validate-entry.py` on any new/updated files
-- [ ] All URLs are valid (checked with link checker)
+- [ ] New or updated URLs were verified
 - [ ] Dates are in YYYY-MM-DD format
 - [ ] Skill level is accurate for typical church volunteer
 - [ ] True cost includes hosting + time
