@@ -122,10 +122,10 @@ The `tools/` directory uses Python 3.8+:
 ```bash
 cd tools
 pip install -r requirements.txt
-python check-links.py  # Run manually
+python validate-entry.py ../path/to/entry.md
 ```
 
-GitHub Actions run these automatically.
+PR checks validate internal links and Compose stacks. `Weekly trust check` handles external links and listed repositories.
 
 ## Style Guide
 

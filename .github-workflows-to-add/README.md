@@ -7,8 +7,7 @@ These files need to be added via the GitHub web interface because they require
 
 ### Workflows (`.github/workflows/`)
 
-1. **link-checker.yml** - Weekly automated link validation
-2. **stale-checker.yml** - Monthly status updates for projects
+1. **stale-checker.yml** - Monthly status updates for projects
 
 ### Issue Templates (`.github/ISSUE_TEMPLATE/`)
 
@@ -26,8 +25,8 @@ These files need to be added via the GitHub web interface because they require
 
 1. Go to your fork: https://github.com/boomertechie/opensource_church_software
 2. Click **"Add file"** → **"Create new file"**
-3. Enter path: `.github/workflows/link-checker.yml`
-4. Copy contents from `link-checker.yml` in this directory
+3. Enter the destination path for the workflow or template you are adding
+4. Copy its contents from this directory
 5. Commit to main
 6. Repeat for other files
 
@@ -43,8 +42,7 @@ git push origin main
 
 1. Go to **Actions** tab in your repo
 2. Enable workflows if prompted
-3. The link-checker will run weekly (Sundays)
-4. The stale-checker runs monthly (1st of each month)
+3. The stale-checker runs monthly (1st of each month)
 
 ## Required Secrets
 
