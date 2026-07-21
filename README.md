@@ -21,7 +21,7 @@ The original repo provided a helpful flat list of tools. This fork adds structur
 This project is not intended to:
 
 - Discourage or diminish the use of great [paid church software](https://churchm.ag/church-management-software/)
-- Provide a comprehensive list of all open-source church software (see [christian_foss](https://github.com/meichthys/christian_foss) instead)
+- Provide a comprehensive list of all open-source church software (see [christian_foss](https://github.com/meichthys/christian_foss) and [Christian Projects](https://github.com/mattrob33/christian-projects) instead)
 - Suggest that open source solutions are always the best choice for every church
 - Serve as a complete installation and configuration guide for each tool
 
@@ -114,12 +114,12 @@ Most churches need software for these common functions:
 - Digital Signatures (LibreSign)
 
 **People & Ministry:**
-- Church Management Systems (ChurchCRM, ChurchApps, Jethro PMM)
+- Church Management Systems (ChurchCRM, B1 Church, Jethro PMM)
 - Volunteer Scheduling (VoloRota — see [Volunteers guide](categories/volunteers/))
 - Children's Check-In (see [Children's Ministry guide](categories/children/))
 
 **Media & Worship:**
-- Presentation Software (OpenLP, Quelea)
+- Presentation Software (OpenLP, Quelea, FreeShow)
 - Tablet Chord Charts (Worship Viewer)
 - Live Streaming (OBS Studio)
 - Sermon Hosting (see [Sermon & Media guide](categories/sermon-media/))
@@ -188,6 +188,7 @@ A condensed list of free and open source tools by category. See category guides 
 ### Presentation
 - [OpenLP](https://openlp.org/) - Worship presentation software
 - [Quelea](https://quelea.org/) - Projection software for worship
+- [FreeShow](https://freeshow.app/) - GPL-3.0 worship presentation software from ChurchApps with stage displays, remote control, media support, and multiple outputs. [Source](https://github.com/ChurchApps/FreeShow)
 - [Worship Viewer](https://github.com/boomertechie/worship-viewer) - Self-hosted tablet chord chart viewer for worship teams (Docker, iPad-optimized)
 
 ### Live Streaming
@@ -195,7 +196,7 @@ A condensed list of free and open source tools by category. See category guides 
 
 ### Church Management Systems
 - [ChurchCRM](https://churchcrm.io/) - Member management, giving tracking, check-in
-- [ChurchApps](https://churchapps.org/) - Suite of church apps (ChMS, check-in, giving)
+- [B1 Church](https://b1.church/) - ChurchApps' MIT-licensed ChMS suite for people, groups, attendance, check-in, giving, and forms. [B1Admin](https://github.com/ChurchApps/B1Admin) self-hosting uses Docker and is marked beta by the project.
 - [Jethro PMM](https://github.com/tbar0970/jethro-pmm) - Pastoral Ministry Manager
 
 ### Email & Communications
@@ -246,6 +247,10 @@ A condensed list of free and open source tools by category. See category guides 
 **Original Repository:** [meichthys/opensource_church_software](https://github.com/meichthys/opensource_church_software)
 
 **This Fork:** Maintained by contributors focused on practical deployment guidance for self-hosted church technology.
+
+**Entry research attribution:** B1 Church and FreeShow were surfaced by Jeremy Zongker ([@jzongker](https://github.com/jzongker)) in the upstream repository's [PR #6](https://github.com/meichthys/opensource_church_software/pull/6), merged 2026-07-16. Product details and licenses were verified against the official ChurchApps projects linked above.
+
+**Related directory:** [Christian Projects](https://github.com/mattrob33/christian-projects), curated by [Matt Robertson](https://github.com/mattrob33), is a developer-oriented catalog of Christian open-source projects and free-to-use developer services.
 
 ## License
 

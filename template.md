@@ -40,6 +40,9 @@ The shortest real path (Docker preferred). Link to upstream docs for the rest.
 - Website:
 - GitHub:
 - Docs:
+
+**Research Attribution:**
+Name and link for the contributor or source that surfaced this entry. Cite the official project pages or repositories used to verify its current facts.
 ```
 
 Optional sections when they earn their space: **Best for / Avoid if** (when the fit is genuinely narrow), **Security notes** (anything handling children's data, payments, or credentials), **Comparison matrix row** (add the tool to the category's matrix if one exists).

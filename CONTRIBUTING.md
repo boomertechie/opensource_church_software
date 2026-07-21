@@ -44,6 +44,7 @@ Required fields:
 - Why churches use it (3 bullets)
 - Installation options
 - Links (website, GitHub, demo, docs)
+- Research attribution: name and link for the contributor or source that surfaced the entry, plus official sources used to verify its current facts
 
 ### 4. Test Your Entry
 
